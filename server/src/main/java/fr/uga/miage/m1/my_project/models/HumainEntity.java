@@ -1,7 +1,6 @@
 package fr.uga.miage.m1.my_project.models;
 
 import jakarta.persistence.Entity;
-import lombok.Data;
 
 @Entity
 public class HumainEntity extends JoueurEntity {
