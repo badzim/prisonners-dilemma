@@ -34,7 +34,7 @@ public abstract class JoueurEntity {
     @OneToMany(mappedBy = "joueurInitie")
     private List<RencontreEntity> rencontresInitiees;
 
-    // Relation Many-to-One (propriétaire) - Joueur peut rejoindre 0 ou 1 rencontre
+    // Relation One-to-Mane - Joueur peut rejoindre plusieurs rencontre
     @OneToMany(mappedBy = "joueurRejoint")
     private List<RencontreEntity> rencontresRejoints;
 

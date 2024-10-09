@@ -34,7 +34,7 @@ public class RencontreEntity {
     @JoinColumn(name = "joueur_initiateur_id", nullable = false)
     private JoueurEntity joueurInitie;
 
-    // Relation bidirectionnelle - Une rencontre peut être rejointe par plusieurs joueurs
+    // Relation bidirectionnelle - Une rencontre peut être rejointe par un joueur
     @ManyToOne
     @JoinColumn(name = "joueur_rejoint_id")
     private JoueurEntity joueurRejoint;
