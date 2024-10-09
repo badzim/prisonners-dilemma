@@ -74,8 +74,8 @@ class NacificateurNaïf extends Strategie {
 
 
 Joueur "*" -- "*" Strategie : utilise >
-Rencontre "*" -- "0..1" Joueur : rejoin <
-Rencontre "*" -- "1" Joueur : Initie <
-Rencontre "1" *-- "*" Tour : Contient >
+Rencontre "*" -- "0..1" Joueur : rejoin
+Rencontre "*" -- "1" Joueur : Initie
+Rencontre " " *-- " " Tour
 
 @enduml

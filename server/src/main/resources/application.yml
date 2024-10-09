@@ -1,0 +1,18 @@
+# sur quel port le serveur démarre
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 5s
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:mydb
+    username: user
+    password: password
+    driverClassName: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
