@@ -7,7 +7,7 @@ import lombok.Data;
 public class HumainEntity extends JoueurEntity {
 
     public void choisirStrategieAutomatique(StrategieEntity strategie) {
-        this.setStrategieAutomatique(strategie);
+        return;
     }
 
     public void abandonner() {

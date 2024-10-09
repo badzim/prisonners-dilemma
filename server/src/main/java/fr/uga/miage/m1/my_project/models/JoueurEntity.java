@@ -20,9 +20,23 @@ public abstract class JoueurEntity {
 
     private int score;
 
-    @ManyToOne
-    @JoinColumn(name = "strategieId")
-    private StrategieEntity strategieAutomatique;
+    // Joueur côté proprio de la relation
+    // Relation Many-to-Many unidirectionnelle
+    @ManyToMany
+    @JoinTable(
+            name = "joueur_strategie",  // Table d'association entre Student et Course
+            joinColumns = @JoinColumn(name = "joueur_id"),  // Clé étrangère vers Student
+            inverseJoinColumns = @JoinColumn(name = "strategie_id")  // Clé étrangère vers Course
+    )
+    private List<StrategieEntity> strategieAutomatiques; // un joueur peut utiliser plusieur strategie dans une journé de partie
+
+    // Relation bidirectionnelle - Joueur peut initier plusieurs rencontres
+    @OneToMany(mappedBy = "joueurInitie")
+    private List<RencontreEntity> rencontresInitiees;
+
+    // Relation Many-to-One (propriétaire) - Joueur peut rejoindre 0 ou 1 rencontre
+    @OneToMany(mappedBy = "joueurRejoint")
+    private List<RencontreEntity> rencontresRejoints;
 
     public void jouer(List<TypeAction> historiqueAdversaire) {
         return ;

@@ -11,7 +11,7 @@ public class RencontreEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long rencontreId;
 
     @ManyToOne
     @JoinColumn(name = "joueur1_id")
@@ -23,8 +23,21 @@ public class RencontreEntity {
 
     private int nombreTours;
 
-    @OneToMany(mappedBy = "rencontre", cascade = CascadeType.ALL)
+
+    // Unidirectionnel : Rencontre connaît Tour, mais Tour ne connaît pas Rencontre
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "rencontre_id")  // Cette annotation place la clé étrangère dans la table Tour
     private List<TourEntity> tours;
+
+    // Relation Many-to-One - Une rencontre est initiée par un seul joueur
+    @ManyToOne
+    @JoinColumn(name = "joueur_initiateur_id", nullable = false)
+    private JoueurEntity joueurInitie;
+
+    // Relation bidirectionnelle - Une rencontre peut être rejointe par plusieurs joueurs
+    @ManyToOne
+    @JoinColumn(name = "joueur_rejoint_id")
+    private JoueurEntity joueurRejoint;
 
     public void demarrer() {
         // Logique pour démarrer
