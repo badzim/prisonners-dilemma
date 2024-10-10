@@ -1,11 +1,10 @@
 package fr.uga.miage.m1.my_project.repositories;
 
-import fr.uga.miage.m1.my_project.models.JoueurEntity;
+
+import fr.uga.miage.m1.my_project.models.TourEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
-public interface JoueurRepository extends JpaRepository<JoueurEntity,Long> {
+public interface StrategieRepository extends JpaRepository<TourEntity, Long> {
 }

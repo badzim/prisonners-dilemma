@@ -12,7 +12,8 @@
 	<description>Prisonnier dilema</description>
 	<modules>
 		<module>server</module>
-	</modules>
+        <module>rest-api</module>
+    </modules>
 
 
 	<!--Indispensable pour faire démarrer spring boot, ici maven récupérer le pom.xml qui correspond à cette dépendance-->

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.List;
+import fr.uga.miage.m1.my_project.enums.EtatRencontre;
 
 @Data
 @Entity
@@ -21,7 +22,9 @@ public class RencontreEntity {
     @JoinColumn(name = "joueur2_id")
     private JoueurEntity joueur2;
 
-    private int nombreTours;
+    private Integer nombreTours;
+
+    private EtatRencontre etat;
 
 
     // Unidirectionnel : Rencontre connaît Tour, mais Tour ne connaît pas Rencontre
