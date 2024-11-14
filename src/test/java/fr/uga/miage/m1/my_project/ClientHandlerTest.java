@@ -79,5 +79,6 @@ class ClientHandlerTest {
         Rencontre result = clientHandler.findRencontreById(rencontres, 1);
 
         // Vérifier
+        assertNull(result);
     }
 }
