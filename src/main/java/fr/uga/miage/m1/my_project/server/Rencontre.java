@@ -185,16 +185,27 @@ public class Rencontre extends Thread {
     }
 
     private Strategie getStrategie(Joueur joueur) {
-        joueur.sendMessage("choisir une strategie automatique parmi : [DonnantDonnantAleatoire, DonnantDonnant, PavlovStrategie, RancunierStrategie, ToujoursCooperer] ");
+        joueur.sendMessage("choisir une strategie automatique parmi : ");
         TypeStrategie typeStrategie = (TypeStrategie) joueur.receiveMessage();
-        Strategie strategie = null;
-        switch (typeStrategie) {
-            case DONNANTDONNANT -> strategie = new DonnantDonnantStrategie();
-            case DONNANTDONNANTALEATOIRE -> strategie = new DonnantDonnantAleatoireStrategie(new SecureRandom());
-            case PAVLOVSTRATEGIE -> strategie = new PavlovStrategie();
-            case RANCUNIERSTRATEGIE -> strategie = new RancunierStrategie();
-            case TOUJOURSCOOPERER -> strategie = new ToujoursCoopererStrategie();
-        }
-        return strategie;
+        return switch (typeStrategie) {
+            case DONNANTDONNANT -> new DonnantDonnantStrategie();
+            case DONNANTDONNANTALEATOIRE -> new DonnantDonnantAleatoireStrategie(new SecureRandom());
+            case DONNANTPOURDEUXDONNANTS -> new DonnantPourDeuxDonnantsStrategie();
+            case DONNANTPOURDEUXDONNANTSALEATOIRE -> new DonnantPourDeuxDonnantsEtAleatoireStrategie(new SecureRandom(), new SecureRandom());
+            case SONDEURNAIF -> new SondeurNaifStrategie(new SecureRandom());
+            case SONDEURREPENTANT -> new SondeurRepentantStrategie(new SecureRandom());
+            case PACIFICATEURNAIF -> new PacificateurNaifStrategie(new SecureRandom());
+            case VRAIPACIFICATEUR -> new VraiPacificateurStrategie(new SecureRandom());
+            case ALEATOIRE -> new AleatoireStrategie(new SecureRandom());
+            case TOUJOURSTRAHIR -> new ToujoursTrahirStrategie();
+            case TOUJOURSCOOPERER -> new ToujoursCoopererStrategie();
+            case RANCUNIERSTRATEGIE -> new RancunierStrategie();
+            case PAVLOVSTRATEGIE -> new PavlovStrategie();
+            case PAVLOVALEATOIRE -> new PavlovAleatoireStrategie(new SecureRandom());
+            case ADAPTATIF -> new AdaptatifStrategie();
+            case GRADUEL -> new GraduelStrategie();
+            case DONNANTDONNANTSOUPCONNEUX -> new DonnantDonnantSoupconneuxStrategie();
+            case RANCUNIERDOUX -> new RancunierDouxStrategie();
+        };
     }
 }

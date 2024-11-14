@@ -24,13 +24,13 @@ class SondeurNaifStrategieTest {
         strategie = new SondeurNaifStrategie(mockRandom);
     }
 
-   /* @Test
+   @Test
     void testImitateLastActionWithChanceToBetray() {
         List<TypeAction> actions = new ArrayList<>();
         actions.add(TypeAction.COOPERER); // Action précédente
 
-        // Mock la probabilité de trahir (ici 0.2)
-        when(mockRandom.nextDouble()).thenReturn(0.1); // 10% de chance de trahir (moins que 0.2, donc on imite l'action)
+        // Mock la probabilité de trahir (ici 0.)
+        when(mockRandom.nextDouble()).thenReturn(0.9); // 100% de chance de trahir (moins que 0.2, donc on imite l'action)
 
         TypeAction result = strategie.getAction(actions, 0);  // On vérifie le comportement pour le tour 0
 
@@ -44,13 +44,13 @@ class SondeurNaifStrategieTest {
         actions.add(TypeAction.COOPERER); // Action précédente
 
         // Mock la probabilité de trahir (ici 0.2)
-        when(mockRandom.nextDouble()).thenReturn(0.3); // 30% de chance de trahir (plus que 0.2, donc on trahit)
+        when(mockRandom.nextDouble()).thenReturn(0.1);
 
         TypeAction result = strategie.getAction(actions, 0);  // On vérifie le comportement pour le tour 0
 
         // Vérifie que la stratégie trahit avec une probabilité plus élevée
         assertEquals(TypeAction.TRAHIR, result, "La stratégie doit trahir avec une probabilité supérieure à 0.2.");
-    }*/
+    }
 
     @Test
     void testImitateActionWhenOpponentBetrays() {
@@ -58,7 +58,7 @@ class SondeurNaifStrategieTest {
         actions.add(TypeAction.TRAHIR); // Action précédente
 
         // Mock la probabilité de trahir (ici 0.2)
-        when(mockRandom.nextDouble()).thenReturn(0.1); // 10% de chance de trahir (moins que 0.2, donc on imite l'action)
+        when(mockRandom.nextDouble()).thenReturn(0.9);
 
         TypeAction result = strategie.getAction(actions, 0);  // On vérifie le comportement pour le tour 0
 

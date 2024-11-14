@@ -196,11 +196,23 @@ public class Client {
     private void traiterChoixStrategie(ObjectOutputStream out, Scanner scanner) throws IOException {
         TypeStrategie typeStrategie = null;
         while (typeStrategie == null) {
-            logger.info("Choisissez votre strategie automatique : ");
+            logger.info("[DonnantDonnant, DonnantDonnantAleatoire, DonnantPourDeuxDonnants, DonnantPourDeuxDonnantsAleatoire, " +
+                    "SondeurNaif, SondeurRepentant, PacificateurNaif, VraiPacificateur, Aleatoire, ToujoursTrahir, ToujoursCooperer, " +
+                    "RancunierStrategie, PavlovStrategie, PavlovAleatoire, Adaptatif, Graduel, DonnantDonnantSoupconneux, RancunierDoux]");
+            logger.info("Choisissez votre stratégie automatique : ");
             String actionInput = scanner.nextLine().toUpperCase();
-            typeStrategie = getTypeStrategie(null, actionInput);
+            typeStrategie = getTypeStrategie(actionInput); // Validation de l’entrée
         }
-        envoyerObjet(out, typeStrategie);
+        envoyerObjet(out, typeStrategie); // Envoi de la stratégie valide
+    }
+
+    private TypeStrategie getTypeStrategie(String actionInput) {
+        try {
+            return TypeStrategie.valueOf(actionInput);
+        } catch (IllegalArgumentException e) {
+            logger.info("Stratégie invalide. Veuillez choisir une stratégie valide.");
+            return null;
+        }
     }
 
     private void envoyerObjet(ObjectOutputStream out, Object obj) throws IOException {
@@ -208,18 +220,7 @@ public class Client {
         out.flush();
     }
 
-    private TypeStrategie getTypeStrategie(TypeStrategie typeStrategie, String actionInput) {
-        try {
-            typeStrategie = TypeStrategie.valueOf(actionInput);
-        } catch (IllegalArgumentException e) {
-            logger.info("Action invalide. Veuillez choisir entre : ");
-            for (TypeStrategie act : TypeStrategie.values()) {
-                logger.info("- {}" , act);
-            }
-            logger.info("Choisissez votre strategie automatique : ");
-        }
-        return typeStrategie;
-    }
+
 
     private TypeAction getTypeAction(TypeAction action, String actionInput) {
         try {

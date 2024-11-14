@@ -1,6 +1,8 @@
 package fr.uga.miage.m1.my_project.server.models.strategies;
 
 import fr.uga.miage.m1.my_project.server.models.enums.TypeAction;
+
+import java.lang.reflect.Type;
 import java.util.List;
 
 public class AdaptatifStrategie extends Strategie {
@@ -14,12 +16,18 @@ public class AdaptatifStrategie extends Strategie {
             0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1 // La séquence initiale c, c, c, c, c, c, t, t, t, t, t
     };
 
+    private TypeAction ancienneAction;
+
     @Override
     public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
         // Si la séquence initiale n'est pas encore terminée, on suit la séquence
+        if (!actions.isEmpty()) updateScores(dernierResultat, ancienneAction);
         if (coupCount < sequenceInitiale.length) {
+            TypeAction action = sequenceInitiale[coupCount] == 0 ? TypeAction.COOPERER : TypeAction.TRAHIR;
+            // garder la trace de l'ancienne action
+            ancienneAction = action;
             coupCount++;
-            return sequenceInitiale[coupCount - 1] == 0 ? TypeAction.COOPERER : TypeAction.TRAHIR;
+            return action;
         }
 
         // Après la séquence initiale, on choisit l'action ayant le meilleur score moyen
@@ -27,14 +35,10 @@ public class AdaptatifStrategie extends Strategie {
         double moyenneT = countT > 0 ? scoreT / countT : 0;
 
         // Choisir l'action avec le meilleur score moyen
-        if (moyenneC > moyenneT) {
-            return TypeAction.COOPERER;
-        } else {
-            return TypeAction.TRAHIR;
-        }
+        return moyenneC >= moyenneT ? TypeAction.COOPERER : TypeAction.TRAHIR;
     }
 
-    public void updateScores(int dernierResultat, TypeAction action) {
+    private void updateScores(int dernierResultat, TypeAction action) {
         // Met à jour les scores pour COOPERER ou TRAHIR
         if (action == TypeAction.COOPERER) {
             scoreC += dernierResultat;

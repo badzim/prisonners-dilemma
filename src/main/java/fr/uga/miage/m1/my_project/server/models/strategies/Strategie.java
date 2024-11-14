@@ -12,6 +12,7 @@ public abstract class Strategie  {
 
     private String name;
     private SecureRandom random;
+    private SecureRandom secondRandom;
 
     protected Strategie() {
         this(new SecureRandom());
@@ -20,6 +21,12 @@ public abstract class Strategie  {
     protected Strategie(SecureRandom random) {
         this.name = this.getClass().getSimpleName();
         this.random = random;
+    }
+
+    protected Strategie(SecureRandom random, SecureRandom secondRandom) {
+        this(random);
+        this.secondRandom = secondRandom;
+
     }
 
     public abstract TypeAction getAction(List<TypeAction> actions, int dernierResultat);
