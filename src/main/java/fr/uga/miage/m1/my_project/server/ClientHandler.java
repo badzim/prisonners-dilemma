@@ -1,6 +1,4 @@
 package fr.uga.miage.m1.my_project.server;
-
-import fr.uga.miage.m1.my_project.server.dtos.RencontreDTO;
 import fr.uga.miage.m1.my_project.server.mappers.RencontreMapper;
 import fr.uga.miage.m1.my_project.server.models.Humain;
 import fr.uga.miage.m1.my_project.server.models.Joueur;
@@ -8,14 +6,11 @@ import fr.uga.miage.m1.my_project.server.models.enums.ChoiceCommand;
 import fr.uga.miage.m1.my_project.server.models.enums.EtatJoueur;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.List;
-import java.util.Objects;
 
 
 
@@ -50,7 +45,7 @@ public class ClientHandler extends Thread {
     }
 
     // Méthode pour initialiser le joueur
-    private Joueur initializePlayer(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    Joueur initializePlayer(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         // Envoyer le message de bienvenue
         out.writeObject("Bienvenue! Veuillez entrer votre nom:");
         out.flush();
@@ -66,7 +61,7 @@ public class ClientHandler extends Thread {
     }
 
     // Méthode pour gérer le menu du joueur
-    private void handlePlayerMenu(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    void handlePlayerMenu(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (joueur.getEtat() == EtatJoueur.EN_MENU) {
             logger.info(joueur.getEtat().toString());
 
@@ -85,7 +80,7 @@ public class ClientHandler extends Thread {
     }
 
     // Méthode pour initier une partie
-    private void initiateGame(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    void initiateGame(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         out.writeObject("Saisir nombre de tours");
         out.flush();
 
@@ -99,7 +94,7 @@ public class ClientHandler extends Thread {
     }
 
     // Méthode pour rejoindre une partie
-    private void joinGame(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    void joinGame(Joueur joueur, ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         List<Rencontre> rencontres = Rencontre.getRencontresEnAttente();
         out.writeObject(RencontreMapper.rencontreToRencontreDTO(rencontres));
         out.flush();
@@ -128,7 +123,7 @@ public class ClientHandler extends Thread {
     }
 
     // Méthode pour trouver une rencontre par ID
-    private Rencontre findRencontreById(List<Rencontre> rencontres, int idRencontre) {
+    Rencontre findRencontreById(List<Rencontre> rencontres, int idRencontre) {
         for (Rencontre rencontre : rencontres) {
             if (rencontre.getIdRencontre() == idRencontre) {
                 return rencontre;

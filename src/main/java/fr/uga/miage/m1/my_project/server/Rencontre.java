@@ -8,8 +8,6 @@ import fr.uga.miage.m1.my_project.server.models.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.server.models.enums.TypeAction;
 import fr.uga.miage.m1.my_project.server.models.strategies.*;
 import lombok.Data;
-
-import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +51,7 @@ public class Rencontre extends Thread {
         incrementNombreRencontreEnAttente();
     }
     
-    Rencontre(Joueur initiateur,int nombreTours) {
+    Rencontre(Joueur initiateur, int nombreTours) {
         this();
         this.initiateur = initiateur;
         this.nombreTours = nombreTours;
