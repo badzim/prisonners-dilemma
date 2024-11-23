@@ -1,8 +1,8 @@
 package fr.uga.miage.m1.my_project.service;
 
 
-import fr.uga.miage.m1.my_project.server.models.enums.TypeStrategie;
-import fr.uga.miage.m1.my_project.server.models.strategies.*;
+import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.model.strategie.*;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
