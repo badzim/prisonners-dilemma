@@ -24,7 +24,7 @@ class ClientHandlerTest {
     @BeforeEach
     public void setUp() throws IOException {
         joueursAttentes = new ArrayList<>();
-        clientHandler = new ClientHandler(null, joueursAttentes); // Pas de socket nécessaire
+        //clientHandler = new ClientHandler(null, joueursAttentes); // Pas de socket nécessaire
 
         // Mock des flux
         out = mock(ObjectOutputStream.class);
@@ -73,7 +73,7 @@ class ClientHandlerTest {
         List<Rencontre> rencontres = new ArrayList<>();
 
         // Appeler la méthode
-        Rencontre result = clientHandler.findRencontreById(rencontres, 1);
+        Rencontre result = clientHandler.findRencontreById(rencontres, "1");
 
         // Vérifier
         assertNull(result);

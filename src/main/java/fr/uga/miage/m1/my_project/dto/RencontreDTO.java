@@ -8,6 +8,6 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 public class RencontreDTO implements Serializable {
-    private int idRencontre;
+    private String idRencontre;
     private int nombreTour;
 }

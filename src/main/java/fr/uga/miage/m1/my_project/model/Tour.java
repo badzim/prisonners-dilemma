@@ -13,23 +13,5 @@ public class Tour {
     public Tour(TypeAction actionInitiateur, TypeAction actionAdversaire) {
         this.actionInitiateur = actionInitiateur;
         this.actionAdversaire = actionAdversaire;
-        calculerScore();
     }
-
-    private void calculerScore() {
-        if (actionInitiateur == TypeAction.COOPERER && actionAdversaire == TypeAction.COOPERER) {
-            scoreInitiateur = 3;
-            scoreAdversaire = 3;
-        } else if (actionInitiateur == TypeAction.COOPERER && actionAdversaire == TypeAction.TRAHIR) {
-            scoreInitiateur = 0;
-            scoreAdversaire = 5;
-        } else if (actionInitiateur == TypeAction.TRAHIR && actionAdversaire == TypeAction.COOPERER) {
-            scoreInitiateur = 5;
-            scoreAdversaire = 0;
-        } else { // Both betray
-            scoreInitiateur = 1;
-            scoreAdversaire = 1;
-        }
-    }
-    
 }

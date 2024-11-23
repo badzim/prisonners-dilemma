@@ -16,7 +16,7 @@ import java.util.Scanner;
 
 
 
-public class Client {
+public class Client extends Thread {
     public static final String SERVEUR_MESSAGE = "Serveur: {}";
     private final String host;
     private final int port;
@@ -27,7 +27,8 @@ public class Client {
         this.port = port;
     }
 
-    public void start() {
+    @Override
+    public void run() {
         try (Socket socket = new Socket(host, port)) {
             // Créer les flux une seule fois, dans cet ordre
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -109,14 +110,14 @@ public class Client {
         boolean choixValide = false;
         while (!choixValide) {
             afficherRencontresDisponibles(rencontres);
-            int idChoisi = demanderIdPartie(scanner);
+            int indiceChoisi = demanderIndicePartie(scanner);
 
-            if (idValide(idChoisi, rencontres.size())) {
+            if (idValide(indiceChoisi, rencontres.size())) {
                 choixValide = true;
-                envoyerIdAuServeur(out, idChoisi);
-                logger.info("Vous avez choisi la partie ID {}.", idChoisi);
+                envoyerIdAuServeur(out, rencontres.get(indiceChoisi - 1).getIdRencontre());
+                logger.info("Vous avez choisi la partie d'indice {}.", indiceChoisi);
             } else {
-                logger.info("ID invalide. Veuillez choisir un ID parmi les parties disponibles.");
+                logger.info("indice invalide. Veuillez choisir un indice parmi les parties disponibles.");
             }
         }
     }
@@ -125,12 +126,12 @@ public class Client {
         logger.info("Voici les parties disponibles :");
         for (int i = 0; i < rencontres.size(); i++) {
             RencontreDTO rencontre = rencontres.get(i);
-            logger.info("ID {} avec {} tours.", (i + 1), rencontre.getNombreTour());
+            logger.info("indice {} ID {} avec {} tours.", (i+1), rencontre.getIdRencontre(), rencontre.getNombreTour());
         }
     }
 
-    private int demanderIdPartie(Scanner scanner) {
-        logger.info("Entrez l'ID de la partie que vous souhaitez rejoindre : ");
+    private int demanderIndicePartie(Scanner scanner) {
+        logger.info("Entrez l'indice de la partie que vous souhaitez rejoindre : ");
         return demanderNombre(scanner);
     }
 
@@ -138,7 +139,7 @@ public class Client {
         return idChoisi > 0 && idChoisi <= maxId;
     }
 
-    private void envoyerIdAuServeur(ObjectOutputStream out, int idChoisi) throws IOException {
+    private void envoyerIdAuServeur(ObjectOutputStream out, String idChoisi) throws IOException {
         out.writeObject(idChoisi);
         out.flush();
     }
@@ -230,14 +231,6 @@ public class Client {
         return action;
     }
 
-    public static void main(String[] args) {
-        String host = "127.0.0.1"; // Adresse du serveur
-        int port = 7842;
-
-        Client client = new Client(host, port);
-        client.start();
-    }
-
     private int demanderNombre(Scanner scanner) {
         int nbTour;
 
@@ -265,5 +258,14 @@ public class Client {
             logger.info("Entrée invalide. Veuillez entrer un entier.");
             return false;
         }
+    }
+
+    public static void main(String[] args) {
+        String host = "127.0.0.1"; // Adresse du serveur
+        int port = 7842;
+
+        Client client = new Client(host, port);
+
+        client.start();
     }
 }

@@ -11,13 +11,12 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 @Service
-public class StrategieFactory {
+public class StrategieFactoryService {
 
     // Map des fournisseurs (Supplier) pour une instanciation "à la demande"
     private final Map<TypeStrategie, Supplier<Strategie>> strategieSuppliers = new HashMap<>();
 
-    public StrategieFactory() {
-        // Enregistrer chaque type de stratégie avec sa logique d'instanciation
+    public StrategieFactoryService() {
         // Enregistrer chaque type de stratégie avec sa logique d'instanciation
         strategieSuppliers.put(TypeStrategie.DONNANTDONNANT, DonnantDonnantStrategie::new);
         strategieSuppliers.put(TypeStrategie.DONNANTDONNANTALEATOIRE, () -> new DonnantDonnantAleatoireStrategie(new SecureRandom()));
