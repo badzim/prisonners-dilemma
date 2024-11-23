@@ -7,6 +7,7 @@ import fr.uga.miage.m1.my_project.server.models.enums.EtatJoueur;
 import fr.uga.miage.m1.my_project.server.models.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.server.models.enums.TypeAction;
 import fr.uga.miage.m1.my_project.server.models.strategies.*;
+import fr.uga.miage.m1.my_project.service.StrategieFactory;
 import lombok.Data;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -185,25 +186,6 @@ public class Rencontre extends Thread {
     private Strategie getStrategie(Joueur joueur) {
         joueur.sendMessage("choisir une strategie automatique parmi : ");
         TypeStrategie typeStrategie = (TypeStrategie) joueur.receiveMessage();
-        return switch (typeStrategie) {
-            case DONNANTDONNANT -> new DonnantDonnantStrategie();
-            case DONNANTDONNANTALEATOIRE -> new DonnantDonnantAleatoireStrategie(new SecureRandom());
-            case DONNANTPOURDEUXDONNANTS -> new DonnantPourDeuxDonnantsStrategie();
-            case DONNANTPOURDEUXDONNANTSALEATOIRE -> new DonnantPourDeuxDonnantsEtAleatoireStrategie(new SecureRandom(), new SecureRandom());
-            case SONDEURNAIF -> new SondeurNaifStrategie(new SecureRandom());
-            case SONDEURREPENTANT -> new SondeurRepentantStrategie(new SecureRandom());
-            case PACIFICATEURNAIF -> new PacificateurNaifStrategie(new SecureRandom());
-            case VRAIPACIFICATEUR -> new VraiPacificateurStrategie(new SecureRandom());
-            case ALEATOIRE -> new AleatoireStrategie(new SecureRandom());
-            case TOUJOURSTRAHIR -> new ToujoursTrahirStrategie();
-            case TOUJOURSCOOPERER -> new ToujoursCoopererStrategie();
-            case RANCUNIERSTRATEGIE -> new RancunierStrategie();
-            case PAVLOVSTRATEGIE -> new PavlovStrategie();
-            case PAVLOVALEATOIRE -> new PavlovAleatoireStrategie(new SecureRandom());
-            case ADAPTATIF -> new AdaptatifStrategie();
-            case GRADUEL -> new GraduelStrategie();
-            case DONNANTDONNANTSOUPCONNEUX -> new DonnantDonnantSoupconneuxStrategie();
-            case RANCUNIERDOUX -> new RancunierDouxStrategie();
-        };
+        return new StrategieFactory().getStrategie(typeStrategie);
     }
 }
