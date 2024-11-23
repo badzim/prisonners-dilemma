@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.model;
+package fr.uga.miage.m1.my_project;
 
 import fr.uga.miage.m1.my_project.dto.RencontreDTO;
 import fr.uga.miage.m1.my_project.model.enums.ChoiceCommand;
