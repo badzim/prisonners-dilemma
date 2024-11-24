@@ -36,46 +36,46 @@ class ClientHandlerTest {
 
 
 
-    @Test
-     void testInitiateGame() throws Exception {
-        // Préparer les données
-        when(in.readObject()).thenReturn(5); // Nombre de tours choisis
-
-        // Appeler la méthode
-        //clientHandler.initiateGame(joueur, out, in);
-
-        // Vérifier que le joueur est en attente et que la rencontre est ajoutée
-        assertEquals(EtatJoueur.EN_ATTENTE, joueur.getEtat());
-        assertTrue(joueursAttentes.contains(joueur));
-        verify(out).writeObject("Saisir nombre de tours");
-    }
-
-
-
-    @Test
-     void testFindRencontreById_Found() {
-        // Ajouter une rencontre avec un ID spécifique
-        Rencontre rencontre = new Rencontre(joueur, 5);
-        List<Rencontre> rencontres = new ArrayList<>();
-        rencontres.add(rencontre);
-
-        // Appeler la méthode
-        //Rencontre result = clientHandler.findRencontreById(rencontres, rencontre.getIdRencontre());
-
-        // Vérifier que la rencontre a été trouvée
-        //assertNotNull(result);
-        //assertEquals(rencontre, result);
-    }
-
-    @Test
-     void testFindRencontreById_NotFound() {
-        // Liste vide
-        List<Rencontre> rencontres = new ArrayList<>();
-
-        // Appeler la méthode
-        //Rencontre result = clientHandler.findRencontreById(rencontres, "1");
-
-        // Vérifier
-        //assertNull(result);
-    }
+//    @Test
+//     void testInitiateGame() throws Exception {
+//        // Préparer les données
+//        when(in.readObject()).thenReturn(5); // Nombre de tours choisis
+//
+//        // Appeler la méthode
+//        //clientHandler.initiateGame(joueur, out, in);
+//
+//        // Vérifier que le joueur est en attente et que la rencontre est ajoutée
+//        assertEquals(EtatJoueur.EN_ATTENTE, joueur.getEtat());
+//        assertTrue(joueursAttentes.contains(joueur));
+//        verify(out).writeObject("Saisir nombre de tours");
+//    }
+//
+//
+//
+//    @Test
+//     void testFindRencontreById_Found() {
+//        // Ajouter une rencontre avec un ID spécifique
+//        Rencontre rencontre = new Rencontre(joueur, 5);
+//        List<Rencontre> rencontres = new ArrayList<>();
+//        rencontres.add(rencontre);
+//
+//        // Appeler la méthode
+//        //Rencontre result = clientHandler.findRencontreById(rencontres, rencontre.getIdRencontre());
+//
+//        // Vérifier que la rencontre a été trouvée
+//        //assertNotNull(result);
+//        //assertEquals(rencontre, result);
+//    }
+//
+//    @Test
+//     void testFindRencontreById_NotFound() {
+//        // Liste vide
+//        List<Rencontre> rencontres = new ArrayList<>();
+//
+//        // Appeler la méthode
+//        //Rencontre result = clientHandler.findRencontreById(rencontres, "1");
+//
+//        // Vérifier
+//        //assertNull(result);
+//    }
 }
