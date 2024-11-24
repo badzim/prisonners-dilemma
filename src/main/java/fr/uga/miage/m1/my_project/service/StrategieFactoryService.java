@@ -1,12 +1,10 @@
 package fr.uga.miage.m1.my_project.service;
 
-
 import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.model.strategie.*;
 import org.springframework.stereotype.Service;
-
 import java.security.SecureRandom;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -14,7 +12,7 @@ import java.util.function.Supplier;
 public class StrategieFactoryService {
 
     // Map des fournisseurs (Supplier) pour une instanciation "à la demande"
-    private final Map<TypeStrategie, Supplier<Strategie>> strategieSuppliers = new HashMap<>();
+    private final Map<TypeStrategie, Supplier<Strategie>> strategieSuppliers = new EnumMap<>(TypeStrategie.class);
 
     public StrategieFactoryService() {
         // Enregistrer chaque type de stratégie avec sa logique d'instanciation

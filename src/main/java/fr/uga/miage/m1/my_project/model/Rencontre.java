@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class Rencontre extends Thread {
+public class Rencontre{
     private String idRencontre;
     private Joueur initiateur;
     private Joueur adversaire;

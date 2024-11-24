@@ -9,6 +9,7 @@ import fr.uga.miage.m1.my_project.model.joueur.Joueur;
 import fr.uga.miage.m1.my_project.model.joueur.Robot;
 import fr.uga.miage.m1.my_project.model.strategie.Strategie;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -49,8 +50,8 @@ public class RencontreService {
         tourService.calculerScore(tour);
         rencontre.getTours().add(tour);
 
-        updatePlayerScore(rencontre, initiateur, tour.getScoreInitiateur());
-        updatePlayerScore(rencontre, adversaire, tour.getScoreAdversaire());
+        updatePlayerScore(initiateur, tour.getScoreInitiateur());
+        updatePlayerScore(adversaire, tour.getScoreAdversaire());
 
         sendTourResults(initiateur, action1, action2, tour.getScoreInitiateur());
         sendTourResults(adversaire, action2, action1, tour.getScoreAdversaire());
@@ -85,7 +86,6 @@ public class RencontreService {
         List<TypeAction> historique = (joueur == rencontre.getInitiateur()) ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur();
         TypeAction action = joueur.jouer(historique, previousScore);
         if (action == TypeAction.ABONDONNER) {
-            synchronized (rencontre) {
                 Joueur robot = handleAbandon(joueur);
                 if (rencontre.getInitiateur() == joueur) {
                     rencontre.setInitiateur(robot);
@@ -94,7 +94,6 @@ public class RencontreService {
                     rencontre.setAdversaire(robot);
                 }
                 return robot.jouer(historique, previousScore);
-            }
         }
 
         return action;
@@ -106,7 +105,7 @@ public class RencontreService {
         return new Robot(joueur.getId() + "_ai", joueur.getNom() + "_ai", joueur.getScore(), strategie);
     }
 
-    private void updatePlayerScore(Rencontre rencontre, Joueur joueur, int score) {
+    private void updatePlayerScore(Joueur joueur, int score) {
         joueur.addScore(score);
     }
 
@@ -173,7 +172,9 @@ public class RencontreService {
 
         sb.append("=== Fin du Résumé ===");
 
-        LoggerFactory.getLogger(Server.class.getName()).info(sb.toString());
+        Logger logger = LoggerFactory.getLogger(Server.class.getName());
+        logger.info("{}", sb);
+
 
     }
 }

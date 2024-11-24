@@ -14,13 +14,13 @@ import java.net.Socket;
 @Service
 @RequiredArgsConstructor
 public class ServerService {
-
+    private static final boolean ISRUNNING = true;
     private final RencontreService rencontreService;
     private final ClientHandlerService clientHandlerService;
 
-    public void start(Server server) {
+    public void start() {
         Logger logger = LoggerFactory.getLogger(ClientHandler.class.getName());
-        int serverPort = server.getPORT();
+        int serverPort = Server.PORT;
         try (ServerSocket serverSocket = new ServerSocket(serverPort)) {
             logger.info("Serveur en écoute sur le port {}", serverPort);
 
@@ -29,6 +29,7 @@ public class ServerService {
                 logger.info("Connexion de {} : {}", clientSocket.getInetAddress(), clientSocket.getPort());
                 ClientHandler handler = new ClientHandler(clientSocket, new RencontreComponent(rencontreService), clientHandlerService);
                 handler.start();
+                if (!ISRUNNING) break;
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

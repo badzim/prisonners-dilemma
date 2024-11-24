@@ -23,7 +23,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class ClientHandlerService {
-    private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ClientHandlerService.class.getName());
 
     private final RencontreManagerService rencontreManagerService;
 
