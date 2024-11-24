@@ -31,7 +31,7 @@ public class SseService {
             log.warn("SseEmitter pour le client {} expiré", clientId);
             sseEmitters.remove(clientId);
         });
-        emitter.onError((e) -> {
+        emitter.onError(e -> {
             log.error("Erreur sur le SseEmitter du client {} : {}", clientId, e.getMessage());
             sseEmitters.remove(clientId);
         });

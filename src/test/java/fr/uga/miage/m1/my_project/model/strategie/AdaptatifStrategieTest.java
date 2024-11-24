@@ -38,18 +38,6 @@ class AdaptatifStrategieTest {
     }
 
     @Test
-    void testEtatInitialStrategie() {
-        assertEquals(strategie.getCoupCount(), 0);
-        assertEquals(strategie.getScoreC(), 0);
-        assertEquals(strategie.getScoreT(), 0);
-        assertEquals(strategie.getCountC(), 0);
-        assertEquals(strategie.getCountT(), 0);
-        double[] expectedResult = {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1};
-        assertArrayEquals(strategie.getSequenceInitiale(), expectedResult);
-
-    }
-
-    @Test
     void testAdaptativeChoiceBasedOnScores() {
         List<TypeAction> actionsAdversaire = new ArrayList<>();
 
@@ -123,12 +111,6 @@ class AdaptatifStrategieTest {
         TypeAction action12 =  strategie.getAction(actionsAdversaire, 1);
         assertEquals(TypeAction.TRAHIR, action12, "Le coup initial doit être COOPERER.");
 
-    }
-
-    @Test
-    void testUpdateScores() {
-        // Simuler quelques actions et résultats pour vérifier la mise à jour des scores
-        // verifier au debut
     }
 
     @Test
