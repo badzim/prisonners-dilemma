@@ -33,7 +33,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<sonar.host.url>https://im2ag-sonar.univ-grenoble-alpes.fr/</sonar.host.url>
 	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,7 +79,6 @@
 		</dependency>
 
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -104,7 +102,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.11</version>
+				<version>0.8.12</version>
 				<executions>
 					<execution>
 						<goals>
@@ -112,16 +110,14 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>generate-code-coverage-report</id>
-						<phase>test</phase>
+						<id>report</id>
+						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
 					</execution>
 				</executions>
-
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
