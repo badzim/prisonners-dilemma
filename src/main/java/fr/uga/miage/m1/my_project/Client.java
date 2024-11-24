@@ -6,7 +6,6 @@ import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
