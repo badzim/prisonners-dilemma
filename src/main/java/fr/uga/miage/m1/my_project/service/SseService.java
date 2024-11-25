@@ -1,8 +1,7 @@
 package fr.uga.miage.m1.my_project.service;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -12,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
+@Data
 public class SseService {
 
     private final Map<String, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
@@ -23,18 +23,9 @@ public class SseService {
         sseEmitters.put(clientId, emitter);
 
         // Nettoyage en cas de déconnexion
-        emitter.onCompletion(() -> {
-            log.debug("SseEmitter pour le client {} complété", clientId);
-            sseEmitters.remove(clientId);
-        });
-        emitter.onTimeout(() -> {
-            log.warn("SseEmitter pour le client {} expiré", clientId);
-            sseEmitters.remove(clientId);
-        });
-        emitter.onError((e) -> {
-            log.error("Erreur sur le SseEmitter du client {} : {}", clientId, e.getMessage());
-            sseEmitters.remove(clientId);
-        });
+        emitter.onCompletion(() -> sseEmitters.remove(clientId));
+        emitter.onTimeout(() -> sseEmitters.remove(clientId));
+        emitter.onError(e -> sseEmitters.remove(clientId));
 
         return emitter;
     }
