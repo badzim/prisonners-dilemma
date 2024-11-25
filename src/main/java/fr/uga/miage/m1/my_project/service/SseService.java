@@ -23,18 +23,9 @@ public class SseService {
         sseEmitters.put(clientId, emitter);
 
         // Nettoyage en cas de déconnexion
-        emitter.onCompletion(() -> {
-            log.debug("SseEmitter pour le client {} complété", clientId);
-            sseEmitters.remove(clientId);
-        });
-        emitter.onTimeout(() -> {
-            log.warn("SseEmitter pour le client {} expiré", clientId);
-            sseEmitters.remove(clientId);
-        });
-        emitter.onError(e -> {
-            log.error("Erreur sur le SseEmitter du client {} : {}", clientId, e.getMessage());
-            sseEmitters.remove(clientId);
-        });
+        emitter.onCompletion(() -> sseEmitters.remove(clientId));
+        emitter.onTimeout(() -> sseEmitters.remove(clientId));
+        emitter.onError(e -> sseEmitters.remove(clientId));
 
         return emitter;
     }
