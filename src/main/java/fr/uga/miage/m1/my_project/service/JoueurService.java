@@ -39,13 +39,4 @@ public class JoueurService {
             throw new InvalidActionRestException("Le joueur doit être dans le menu");
         }
     }
-
-    /**
-     * Mettre à jour l'état d'un joueur.
-     */
-    public void mettreAJourEtatJoueur(String clientId, EtatJoueur nouvelEtat) {
-        Joueur joueur = getHumain(clientId);
-        joueur.setEtat(nouvelEtat);
-        log.info("État du joueur {} mis à jour à {}.", clientId, nouvelEtat);
-    }
 }

@@ -6,7 +6,7 @@ import fr.uga.miage.m1.my_project.model.enums.*;
 import fr.uga.miage.m1.my_project.model.joueur.*;
 import fr.uga.miage.m1.my_project.model.strategie.*;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
-import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
+import fr.uga.miage.m1.my_project.mapper.RencontreMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

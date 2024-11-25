@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.restapi.mapper;
+package fr.uga.miage.m1.my_project.mapper;
 
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import fr.uga.miage.m1.my_project.model.Rencontre;
