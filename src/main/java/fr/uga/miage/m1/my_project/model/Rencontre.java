@@ -15,6 +15,7 @@ public class Rencontre{
     private List<TypeAction> historiqueInitiateur;
     private List<TypeAction> historiqueAdversaire;
     private List<Tour> tours;
+    private Tour currentTour;
 
     public Rencontre() {
         this.idRencontre = UUID.randomUUID().toString();
@@ -24,14 +25,7 @@ public class Rencontre{
         this.historiqueInitiateur = new ArrayList<>();
         this.historiqueAdversaire = new ArrayList<>();
         this.tours = new ArrayList<>();
+        this.currentTour = null;
+
     }
-    
-    public Rencontre(Joueur initiateur, int nombreTours) {
-        this();
-        this.initiateur = initiateur;
-        this.nombreTours = nombreTours;
-    }
-
-
-
 }

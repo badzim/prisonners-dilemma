@@ -25,6 +25,4 @@ public class Robot extends Joueur {
         }
         return TypeAction.COOPERER; // Valeur par défaut
     }
-
-    // Méthodes spécifiques aux robots peuvent être ajoutées ici
 }

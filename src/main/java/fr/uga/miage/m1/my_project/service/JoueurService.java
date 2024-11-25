@@ -1,0 +1,51 @@
+package fr.uga.miage.m1.my_project.service;
+
+import fr.uga.miage.m1.my_project.exception.rest.InvalidActionRestException;
+import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
+import fr.uga.miage.m1.my_project.model.joueur.Humain;
+import fr.uga.miage.m1.my_project.model.joueur.Joueur;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
+@Service
+public class JoueurService {
+
+    // Map des joueurs connectés, avec leur ID comme clé
+    private final Map<String, Joueur> joueursConnectes = new ConcurrentHashMap<>();
+
+    /**
+     * Récupérer un joueur par son ID.
+     */
+    public Joueur getHumain(String clientId) {
+        return joueursConnectes.computeIfAbsent(clientId, k -> {
+            Joueur joueur1 = new Humain(clientId, "Joueur" + clientId);
+            joueur1.setEtat(EtatJoueur.EN_MENU);
+            joueursConnectes.put(clientId, joueur1);
+            return joueur1;
+        });
+
+    }
+
+    /**
+     * Vérifier si un joueur peut initier une rencontre.
+     */
+    public void joueurEstEnMenu(String clientId) {
+        Joueur joueur = getHumain(clientId);
+        if (joueur.getEtat() != EtatJoueur.EN_MENU) {
+            throw new InvalidActionRestException("Le joueur doit être dans le menu");
+        }
+    }
+
+    /**
+     * Mettre à jour l'état d'un joueur.
+     */
+    public void mettreAJourEtatJoueur(String clientId, EtatJoueur nouvelEtat) {
+        Joueur joueur = getHumain(clientId);
+        joueur.setEtat(nouvelEtat);
+        log.info("État du joueur {} mis à jour à {}.", clientId, nouvelEtat);
+    }
+}

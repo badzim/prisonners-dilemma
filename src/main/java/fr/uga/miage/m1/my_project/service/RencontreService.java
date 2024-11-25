@@ -1,130 +1,310 @@
 package fr.uga.miage.m1.my_project.service;
 
+import fr.uga.miage.m1.my_project.exception.rest.*;
 import fr.uga.miage.m1.my_project.model.*;
-import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
-import fr.uga.miage.m1.my_project.model.joueur.Humain;
-import fr.uga.miage.m1.my_project.model.joueur.Joueur;
-import fr.uga.miage.m1.my_project.model.joueur.Robot;
-import fr.uga.miage.m1.my_project.model.strategie.Strategie;
+import fr.uga.miage.m1.my_project.model.enums.*;
+import fr.uga.miage.m1.my_project.model.joueur.*;
+import fr.uga.miage.m1.my_project.model.strategie.*;
+import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
+import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RencontreService {
+
     private final TourService tourService;
+    private final SseService sseService;
+    private final RencontreManagerService rencontreManagerService;
+    private final JoueurService joueurService;
+    private final StrategieFactoryService strategieFactoryService;
 
-    public void initialiserRencontre(Rencontre rencontre) {
-        Joueur initiateur = rencontre.getInitiateur();
-        Joueur adversaire = rencontre.getAdversaire();
-        initiateur.setEtat(EtatJoueur.EN_PARTIE);
+    /**
+     * Initialise une nouvelle rencontre.
+     */
+    public boolean initierRencontre(String clientId, int nombreTours) {
+        verifyClientConnected(clientId);
+        joueurService.joueurEstEnMenu(clientId);
+
+        Joueur initiateur = joueurService.getHumain(clientId);
+        initiateur.setEtat(EtatJoueur.EN_ATTENTE);
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setNombreTours(nombreTours);
+        rencontre.setInitiateur(initiateur);
+
+        rencontreManagerService.incrementNombreRencontreEnAttente();
+        rencontreManagerService.addToRencontreEnAttente(rencontre);
+
+        sseService.sendMessage(clientId, "Rencontre initiée. En attente d'un autre joueur.");
+        log.info("Rencontre initiée par le client {} avec {} tours.", clientId, nombreTours);
+        return true;
+    }
+
+    /**
+     * Permet à un joueur de rejoindre une rencontre existante.
+     */
+    public void rejoindreRencontre(String clientId, String idRencontre) {
+        verifyClientConnected(clientId);
+        joueurService.joueurEstEnMenu(clientId);
+
+        Rencontre rencontre = validateRejoindreRencontre(clientId, idRencontre);
+
+        Joueur adversaire = joueurService.getHumain(clientId);
         adversaire.setEtat(EtatJoueur.EN_PARTIE);
-        initiateur.sendMessage("Rencontre commencée avec " + adversaire.getNom());
-        adversaire.sendMessage("Rencontre commencée avec " + initiateur.getNom());
-    }
+        rencontre.setAdversaire(adversaire);
 
-    public void gererTour(Rencontre rencontre, int numeroTour) {
         Joueur initiateur = rencontre.getInitiateur();
-        Joueur adversaire = rencontre.getAdversaire();
+        initiateur.setEtat(EtatJoueur.EN_PARTIE);
 
-        sendTourMessage(initiateur, numeroTour);
-        sendTourMessage(adversaire, numeroTour);
+        rencontreManagerService.decrementNombreRencontreEnAttente(rencontre);
+        rencontreManagerService.addToRencontreMap(clientId, rencontre);
+        rencontreManagerService.addToRencontreMap(initiateur.getId(), rencontre);
 
-        int previousScoreInitiateur = getPreviousScore(rencontre, initiateur);
-        int previousScoreAdversaire = getPreviousScore(rencontre, adversaire);
+        rencontre.setCurrentTour(new Tour(1));
 
-        TypeAction action1 = getPlayerAction(rencontre, initiateur, previousScoreInitiateur);
-        initiateur = rencontre.getInitiateur();
-        TypeAction action2 = getPlayerAction(rencontre, adversaire, previousScoreAdversaire);
-        adversaire = rencontre.getAdversaire();
-
-        rencontre.getHistoriqueInitiateur().add(action1);
-        rencontre.getHistoriqueAdversaire().add(action2);
-
-        Tour tour = new Tour(action1, action2);
-        tourService.calculerScore(tour);
-        rencontre.getTours().add(tour);
-
-        updatePlayerScore(initiateur, tour.getScoreInitiateur());
-        updatePlayerScore(adversaire, tour.getScoreAdversaire());
-
-        sendTourResults(initiateur, action1, action2, tour.getScoreInitiateur());
-        sendTourResults(adversaire, action2, action1, tour.getScoreAdversaire());
+        sseService.sendMessage(initiateur.getId(), "Un joueur a rejoint la rencontre. La partie commence !");
+        sseService.sendMessage(clientId, "Vous avez rejoint la rencontre. La partie commence !");
     }
 
-    public void terminerRencontre(Rencontre rencontre) {
-        Joueur initiateur = rencontre.getInitiateur();
-        Joueur adversaire = rencontre.getAdversaire();
+    /**
+     * Valide si un joueur peut rejoindre une rencontre.
+     */
+    public Rencontre validateRejoindreRencontre(String clientId, String idRencontre) {
+        verifyClientConnected(clientId);
 
-        sendFinResult(initiateur, adversaire);
-        sendFinResult(adversaire, initiateur);
-        logRencontreInfo(rencontre);
-    }
+        Rencontre rencontre = rencontreManagerService.findRencontreEnAttenteById(idRencontre);
 
-    // Méthodes privées pour les actions spécifiques
-    private void sendTourMessage(Joueur joueur, int tourNumber) {
-        if (joueur instanceof Humain) {
-            joueur.sendMessage("Tour " + tourNumber);
+        if (rencontre.getInitiateur().getId().equals(clientId)) {
+            throw new InvalidActionRestException("Vous ne pouvez pas rejoindre votre propre partie.");
         }
-    }
 
-    private int getPreviousScore(Rencontre rencontre, Joueur joueur) {
-        List<Tour> tours = rencontre.getTours();
-        if (!tours.isEmpty()) {
-            Tour lastTour = tours.get(tours.size() - 1);
-            return (joueur == rencontre.getInitiateur()) ? lastTour.getScoreInitiateur() : lastTour.getScoreAdversaire();
+        if (rencontre.getAdversaire() != null) {
+            throw new InvalidActionRestException("La rencontre est déjà complète.");
         }
-        return 0;
+        return rencontre;
     }
 
-    private TypeAction getPlayerAction(Rencontre rencontre, Joueur joueur, int previousScore) {
-        List<TypeAction> historique = (joueur == rencontre.getInitiateur()) ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur();
-        TypeAction action = joueur.jouer(historique, previousScore);
+    /**
+     * Enregistre le choix d'un joueur pour un tour.
+     */
+    public synchronized void enregistrerChoix(String clientId, TypeAction action, TypeStrategie strategie) {
+        verifyClientConnected(clientId);
+
+        Rencontre rencontre = getRencontreByClientId(clientId);
+        Joueur joueur = getJoueurFromRencontre(rencontre, clientId);
+
         if (action == TypeAction.ABONDONNER) {
-                Joueur robot = handleAbandon(joueur);
-                if (rencontre.getInitiateur() == joueur) {
-                    rencontre.setInitiateur(robot);
-                }
-                else {
-                    rencontre.setAdversaire(robot);
-                }
-                return robot.jouer(historique, previousScore);
+            Strategie strategieChoisie = (strategie != null)
+                    ? strategieFactoryService.getStrategie(strategie)
+                    : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
+            joueur.setStrategieAutomatique(strategieChoisie);
+            handleAbandon(rencontre, joueur);
+            return;
         }
 
-        return action;
+        enregistrerActionJoueur(rencontre, joueur, action);
+
+        if (estTourPret(rencontre)) {
+            processTour(rencontre);
+        }
     }
 
-    private Joueur handleAbandon(Joueur joueur) {
-        Strategie strategie = getStrategie(joueur);
-        joueur.close();
+    /**
+     * Traite un tour une fois que les deux joueurs ont fait leur choix.
+     */
+    private void processTour(Rencontre rencontre) {
+        Tour tour = rencontre.getCurrentTour();
+        tourService.calculerScore(tour);
+
+        Joueur initiateur = rencontre.getInitiateur();
+        Joueur adversaire = rencontre.getAdversaire();
+
+        initiateur.addScore(tour.getScoreInitiateur());
+        adversaire.addScore(tour.getScoreAdversaire());
+
+        notifierScoresAuxJoueurs(rencontre, tour);
+
+        passerAuTourSuivant(rencontre);
+    }
+
+    /**
+     * Gère l'abandon d'un joueur.
+     */
+    private void handleAbandon(Rencontre rencontre, Joueur joueur) {
+        Joueur robot = remplacerJoueurParRobot(joueur);
+
+        if (joueur.equals(rencontre.getInitiateur())) {
+            rencontre.setInitiateur(robot);
+            enregistrerActionRobot(rencontre, robot, true);
+        } else if (joueur.equals(rencontre.getAdversaire())) {
+            rencontre.setAdversaire(robot);
+            enregistrerActionRobot(rencontre, robot, false);
+        }
+
+        sseService.sendMessage(joueur.getId(), "Vous avez abandonné. Vous avez été remplacé par un robot.");
+        sseService.broadcast(String.format("Le joueur %s a abandonné et a été remplacé par %s.", joueur.getNom(), robot.getNom()));
+    }
+
+    /**
+     * Remplace un joueur par un robot utilisant la stratégie spécifiée.
+     */
+    private Joueur remplacerJoueurParRobot(Joueur joueur) {
+        Strategie strategie = joueur.getStrategieAutomatique();
         return new Robot(joueur.getId() + "_ai", joueur.getNom() + "_ai", joueur.getScore(), strategie);
     }
 
-    private void updatePlayerScore(Joueur joueur, int score) {
-        joueur.addScore(score);
-    }
+    /**
+     * Enregistre l'action d'un robot pour le tour en cours.
+     */
+    private void enregistrerActionRobot(Rencontre rencontre, Joueur robot, boolean isInitiateur) {
+        TypeAction action = robot.jouer(
+                isInitiateur ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur(),
+                robot.getScore()
+        );
 
-    private void sendTourResults(Joueur joueur, TypeAction playerAction, TypeAction opponentAction, int scoreThisTour) {
-        if (joueur instanceof Humain) {
-            joueur.sendMessage("Résultat du tour: Vous avez " + playerAction + ", l'adversaire a " + opponentAction + ".");
-            joueur.sendMessage("Votre score pour ce tour: " + scoreThisTour + ". Score total: " + joueur.getScore() + ".");
+        if (isInitiateur) {
+            rencontre.getCurrentTour().setActionInitiateur(action);
+        } else {
+            rencontre.getCurrentTour().setActionAdversaire(action);
         }
     }
 
-    private void sendFinResult(Joueur joueur, Joueur adversaire) {
-        if (joueur instanceof Humain) {
-            String resultat = determinerResultat(joueur, adversaire);
-            joueur.sendMessage("La partie est terminée. Vous avez " + resultat + " !");
-            joueur.sendMessage("Votre score final est de " + joueur.getScore() + ".");
-            joueur.sendMessage("Bye");
+    /**
+     * Enregistre l'action d'un joueur pour le tour en cours.
+     */
+    private void enregistrerActionJoueur(Rencontre rencontre, Joueur joueur, TypeAction action) {
+        Tour tour = rencontre.getCurrentTour();
+
+        if (joueur.equals(rencontre.getInitiateur())) {
+            if (tour.getActionInitiateur() != null) {
+                throw new InvalidActionRestException("Vous avez déjà fait votre choix pour ce tour.");
+            }
+            tour.setActionInitiateur(action);
+        } else if (joueur.equals(rencontre.getAdversaire())) {
+            if (tour.getActionAdversaire() != null) {
+                throw new InvalidActionRestException("Vous avez déjà fait votre choix pour ce tour.");
+            }
+            tour.setActionAdversaire(action);
+        } else {
+            throw new InvalidActionRestException("Le joueur ne fait pas partie de cette rencontre.");
         }
     }
 
+    /**
+     * Notifie les joueurs des résultats du tour.
+     */
+    private void notifierScoresAuxJoueurs(Rencontre rencontre, Tour tour) {
+        notifierJoueur(rencontre.getInitiateur(), tour.getNumeroTour(), tour.getActionInitiateur(), tour.getActionAdversaire(), tour.getScoreInitiateur());
+        notifierJoueur(rencontre.getAdversaire(), tour.getNumeroTour(), tour.getActionAdversaire(), tour.getActionInitiateur(), tour.getScoreAdversaire());
+    }
+
+    private void notifierJoueur(Joueur joueur, int numeroTour, TypeAction actionJoueur, TypeAction actionAdversaire, int scoreTour) {
+        sseService.sendMessage(joueur.getId(), String.format(
+                "Tour %d terminé. Vous avez %s, votre adversaire a %s. Score ce tour : %d. Score total : %d.",
+                numeroTour, actionJoueur, actionAdversaire, scoreTour, joueur.getScore()
+        ));
+    }
+
+    /**
+     * Vérifie si le tour est prêt à être traité.
+     */
+    public boolean estTourPret(Rencontre rencontre) {
+        Tour tour = rencontre.getCurrentTour();
+        return tour.getActionInitiateur() != null && tour.getActionAdversaire() != null;
+    }
+
+    /**
+     * Passe au tour suivant ou termine la rencontre si tous les tours ont été joués.
+     */
+    private void passerAuTourSuivant(Rencontre rencontre) {
+        Tour previousTour = rencontre.getCurrentTour();
+        rencontre.getTours().add(previousTour);
+
+        if (previousTour.getNumeroTour() < rencontre.getNombreTours()) {
+            int nextTourNumber = previousTour.getNumeroTour() + 1;
+            Tour newTour = new Tour(nextTourNumber);
+            rencontre.setCurrentTour(newTour);
+
+            Joueur initiateur = rencontre.getInitiateur();
+            Joueur adversaire = rencontre.getAdversaire();
+
+            handleRobotActionAtTourStart(rencontre, initiateur, true);
+            handleRobotActionAtTourStart(rencontre, adversaire, false);
+
+            if (estTourPret(rencontre)) {
+                processTour(rencontre);
+            } else {
+                promptHumanPlayers(rencontre);
+            }
+        } else {
+            terminerRencontre(rencontre);
+        }
+    }
+
+    /**
+     * Gère l'action du robot au début d'un nouveau tour.
+     */
+    private void handleRobotActionAtTourStart(Rencontre rencontre, Joueur joueur, boolean isInitiateur) {
+        if (joueur instanceof Robot) {
+            TypeAction action = joueur.jouer(
+                    isInitiateur ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur(),
+                    joueur.getScore()
+            );
+            if (isInitiateur) {
+                rencontre.getCurrentTour().setActionInitiateur(action);
+            } else {
+                rencontre.getCurrentTour().setActionAdversaire(action);
+            }
+        }
+    }
+
+    /**
+     * Invite les joueurs humains à faire leur choix pour le tour en cours.
+     */
+    private void promptHumanPlayers(Rencontre rencontre) {
+        Tour currentTour = rencontre.getCurrentTour();
+        int tourNumber = currentTour.getNumeroTour();
+
+        if (currentTour.getActionInitiateur() == null && !(rencontre.getInitiateur() instanceof Robot)) {
+            sseService.sendMessage(rencontre.getInitiateur().getId(), "Veuillez faire votre choix pour le tour " + tourNumber);
+        }
+
+        if (currentTour.getActionAdversaire() == null && !(rencontre.getAdversaire() instanceof Robot)) {
+            sseService.sendMessage(rencontre.getAdversaire().getId(), "Veuillez faire votre choix pour le tour " + tourNumber);
+        }
+    }
+
+    /**
+     * Termine la rencontre et notifie les joueurs du résultat final.
+     */
+    private void terminerRencontre(Rencontre rencontre) {
+        Joueur initiateur = rencontre.getInitiateur();
+        Joueur adversaire = rencontre.getAdversaire();
+
+        String resultatInitiateur = determinerResultat(initiateur, adversaire);
+        String resultatAdversaire = determinerResultat(adversaire, initiateur);
+
+        sseService.sendMessage(initiateur.getId(), String.format(
+                "Rencontre terminée. Vous avez %s. Score final : %d.",
+                resultatInitiateur, initiateur.getScore()
+        ));
+        sseService.sendMessage(adversaire.getId(), String.format(
+                "Rencontre terminée. Vous avez %s. Score final : %d.",
+                resultatAdversaire, adversaire.getScore()
+        ));
+
+        logRencontreInfo(rencontre);
+    }
+
+    /**
+     * Détermine le résultat (gagné, perdu, match nul) pour un joueur donné.
+     */
     private String determinerResultat(Joueur joueur, Joueur adversaire) {
         int scoreJoueur = joueur.getScore();
         int scoreAdversaire = adversaire.getScore();
@@ -138,12 +318,19 @@ public class RencontreService {
         }
     }
 
-    private Strategie getStrategie(Joueur joueur) {
-        joueur.sendMessage("choisir une strategie automatique parmi : ");
-        TypeStrategie typeStrategie = (TypeStrategie) joueur.receiveMessage();
-        return new StrategieFactoryService().getStrategie(typeStrategie);
+    /**
+     * Récupère la liste des rencontres disponibles.
+     */
+    public List<RencontreDto> getRencontresDisponibles() {
+        return rencontreManagerService.getRencontresEnAttente()
+                .stream()
+                .map(RencontreMapper::toDto)
+                .toList();
     }
 
+    /**
+     * Journalise les informations détaillées d'une rencontre.
+     */
     private void logRencontreInfo(Rencontre rencontre) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n=== Résumé de la Rencontre ===\n");
@@ -153,12 +340,12 @@ public class RencontreService {
         Joueur initiateur = rencontre.getInitiateur();
         Joueur adversaire = rencontre.getAdversaire();
 
-        sb.append("initiateur : ").append(initiateur.getNom())
+        sb.append("Initiateur : ").append(initiateur.getNom())
                 .append(" (Score : ").append(initiateur.getScore()).append(")\n");
-        sb.append("adversaire : ").append(adversaire.getNom())
+        sb.append("Adversaire : ").append(adversaire.getNom())
                 .append(" (Score : ").append(adversaire.getScore()).append(")\n\n");
-
         sb.append("Détails des tours :\n");
+
         List<Tour> tours = rencontre.getTours();
         for (int i = 0; i < tours.size(); i++) {
             Tour tour = tours.get(i);
@@ -169,12 +356,41 @@ public class RencontreService {
             sb.append("  Score adversaire ce tour : ").append(tour.getScoreAdversaire()).append("\n");
             sb.append("\n");
         }
-
         sb.append("=== Fin du Résumé ===");
 
-        Logger logger = LoggerFactory.getLogger(Server.class.getName());
-        logger.info("{}", sb);
+        log.info("{}", sb);
+    }
 
+    /**
+     * Vérifie si le client est connecté via SSE.
+     */
+    private void verifyClientConnected(String clientId) {
+        if (!sseService.getSseEmitters().containsKey(clientId)) {
+            throw new RencontreNotFoundRestException("Le client n'est pas connecté.", clientId);
+        }
+    }
 
+    /**
+     * Récupère la rencontre associée à un client.
+     */
+    private Rencontre getRencontreByClientId(String clientId) {
+        Rencontre rencontre = rencontreManagerService.getRencontreMap().get(clientId);
+        if (rencontre == null) {
+            throw new RencontreNotFoundRestException("Rencontre non trouvée pour le client.", clientId);
+        }
+        return rencontre;
+    }
+
+    /**
+     * Récupère le joueur d'une rencontre à partir de son ID.
+     */
+    private Joueur getJoueurFromRencontre(Rencontre rencontre, String clientId) {
+        if (clientId.equals(rencontre.getInitiateur().getId())) {
+            return rencontre.getInitiateur();
+        } else if (clientId.equals(rencontre.getAdversaire().getId())) {
+            return rencontre.getAdversaire();
+        } else {
+            throw new InvalidActionRestException("Le joueur ne fait pas partie de cette rencontre.");
+        }
     }
 }
