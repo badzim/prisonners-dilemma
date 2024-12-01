@@ -1,0 +1,58 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Cloner le dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Construire le JAR avec Maven
+      - name: Build JAR with Maven
+        run: mvn clean package
+
+      # Étape 3 : Sauvegarder le fichier JAR comme artefact
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-project-jar
+          path: target/*.jar
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      # Étape 1 : Cloner le dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Télécharger le JAR depuis les artefacts
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: my-project-jar
+
+      # Étape 3 : Construire l’image Docker
+      - name: Build Docker image
+        run: |
+          docker build -t badzim/codelands:dpr-api-latest -f docker/Dockerfile .
+          docker tag badzim/codelands:dpr-api-latest badzim/codelands:dpr-api-v${{ github.run_number }}
+
+      # Étape 4 : Pousser l’image Docker
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Push images
+        run: |
+          docker push badzim/codelands:dpr-api-latest
+          docker push badzim/codelands:dpr-api-v${{ github.run_number }}

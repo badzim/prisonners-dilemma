@@ -3,7 +3,7 @@
 # Variables
 DOCKER_REPO="badzim/codelands"
 
-VERSION=${1:-"latest"} # Utilise le paramètre passé ou "latest" par défaut
+VERSION=${1:-"0.0"} # Utilise le paramètre passé ou "latest" par défaut
 
 echo "=================================================="
 echo "🚀 Starting Deployment Script for Version $VERSION"
@@ -29,6 +29,8 @@ docker push $DOCKER_REPO:dpr-api-latest
 echo "🧹 Cleaning up local images..."
 docker rmi $DOCKER_REPO:dpr-api-v$VERSION $DOCKER_REPO:dpr-api-latest || true
 
+echo "🧹 Cleaning up local target..."
+rm -rfd ./target
 
 echo "=================================================="
 echo "✅ Deployment Completed Successfully!"
