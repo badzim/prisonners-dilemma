@@ -1,0 +1,62 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - dev-app
+  pull_request:
+    branches:
+      - main
+      - dev-app
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Cloner le code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Installer JDK et Maven
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build and run tests
+        run: |
+          mvn clean package
+        
+
+      # Étape 3 : Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # Étape 4 : Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t badzim/codelands:dpr-api-latest -f docker/Dockerfile .
+          docker tag badzim/codelands:dpr-api-latest badzim/codelands:dpr-api-v${{ github.run_number }}
+
+      # Étape 5 : Push Docker image
+      - name: Push Docker image
+        run: |
+          docker push badzim/codelands:dpr-api-latest
+          docker push badzim/codelands:dpr-api-v${{ github.run_number }}
+            # Étape 1 : Configurer SSH
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Étape 7 : Exécuter le script de mise à jour sur le serveur
+      - name: Deploy to production
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_LOGIN }}@${{ secrets.SERVER_IP }} "/root/codelands/api/update.sh"

@@ -28,7 +28,7 @@ public class SseService {
             } catch (Exception e) {
                 log.error("Exception dans la tâche planifiée : {}", e.getMessage(), e);
             }
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, 7, TimeUnit.SECONDS);
     }
 
     // Ajouter un SseEmitter pour un client donné
