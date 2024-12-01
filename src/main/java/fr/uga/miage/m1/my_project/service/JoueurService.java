@@ -24,10 +24,8 @@ public class JoueurService {
         return joueursConnectes.computeIfAbsent(clientId, k -> {
             Joueur joueur1 = new Humain(clientId, "Joueur" + clientId);
             joueur1.setEtat(EtatJoueur.EN_MENU);
-            joueursConnectes.put(clientId, joueur1);
             return joueur1;
         });
-
     }
 
     /**

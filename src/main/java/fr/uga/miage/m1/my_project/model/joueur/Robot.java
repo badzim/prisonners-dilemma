@@ -12,10 +12,10 @@ public class Robot extends Joueur {
         this.score = score;
     }
 
-    public Robot(String id, String nom, int score, Strategie strategie) {
+    public Robot(String id, String nom, int score, Strategie strategie, EtatJoueur etat) {
         this(id, nom, score);
         this.strategieAutomatique = strategie;
-        this.etat = EtatJoueur.EN_PARTIE;
+        this.etat = etat;
     }
 
     @Override

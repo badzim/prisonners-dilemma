@@ -5,10 +5,12 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -16,6 +18,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SseService {
 
     private final Map<String, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService pingScheduler = Executors.newSingleThreadScheduledExecutor();
+
+
+    SseService() {
+        pingScheduler.scheduleAtFixedRate(() -> {
+            try {
+                sendPingToClients(); // Appel à ta méthode
+            } catch (Exception e) {
+                log.error("Exception dans la tâche planifiée : {}", e.getMessage(), e);
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
 
     // Ajouter un SseEmitter pour un client donné
     public SseEmitter addSseEmitter(String clientId) {
@@ -27,8 +41,15 @@ public class SseService {
             throw new ClientIdUsedRestException("Un client avec cet ID est déjà connecté : ",  clientId);
         }
 
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        SseEmitter emitter = getSseEmitter(clientId);
+
         sseEmitters.put(clientId, emitter);
+        return emitter;
+    }
+
+    private SseEmitter getSseEmitter(String clientId) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
 
         // Nettoyage en cas de déconnexion
         emitter.onCompletion(() -> {
@@ -43,7 +64,6 @@ public class SseService {
             log.error("Erreur sur le SseEmitter du client {} : {}", clientId, e.getMessage());
             sseEmitters.remove(clientId);
         });
-
         return emitter;
     }
 
@@ -73,5 +93,26 @@ public class SseService {
                 sseEmitters.remove(clientId);
             }
         });
+    }
+
+    /**
+     * Envoyer un ping à tous les clients
+     */
+    private void sendPingToClients() {
+        try {
+
+
+            sseEmitters.forEach((clientId, emitter) -> {
+                try {
+                    emitter.send(SseEmitter.event().name("ping").data("ping"));
+                } catch (IOException e) {
+                    log.warn("Erreur lors de l'envoi au client {}: {}", clientId, e.getMessage());
+                    sseEmitters.get(clientId).complete(); // Planifie la suppression
+                }
+            });
+        } catch (Exception e) {
+            log.error("Exception dans sendPingToClients : {}", e.getMessage());
+            // L'exception est loggée mais ne stoppe pas le scheduler
+        }
     }
 }

@@ -1,8 +1,13 @@
 package fr.uga.miage.m1.my_project.service;
 
 
+import fr.uga.miage.m1.my_project.exception.rest.InvalidActionRestException;
+import fr.uga.miage.m1.my_project.model.Rencontre;
 import fr.uga.miage.m1.my_project.model.Tour;
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.model.joueur.Humain;
+import fr.uga.miage.m1.my_project.model.joueur.Joueur;
+import fr.uga.miage.m1.my_project.model.joueur.Robot;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,5 +32,26 @@ public class TourService {
         }
         tour.setScoreInitiateur(scoreInitiateur);
         tour.setScoreAdversaire(scoreAdversaire);
+    }
+
+    public void setActionJoueur(Joueur joueur, Rencontre rencontre, TypeAction actionJoueur) {
+        Tour tour = rencontre.getCurrentTour();
+        Joueur initiateur = rencontre.getInitiateur();
+        Joueur adversaire = rencontre.getAdversaire();
+
+
+        if (joueur.equals(initiateur)) {
+            if (tour.getActionInitiateur() != null && initiateur instanceof Humain) {
+                throw new InvalidActionRestException("Vous avez déjà fait votre choix pour ce tour.");
+            }
+            tour.setActionInitiateur(actionJoueur);
+        } else if (joueur.equals(adversaire)) {
+            if (tour.getActionAdversaire() != null && adversaire instanceof Humain) {
+                throw new InvalidActionRestException("Vous avez déjà fait votre choix pour ce tour.");
+            }
+            tour.setActionAdversaire(actionJoueur);
+        } else {
+            throw new InvalidActionRestException("Le joueur ne fait pas partie de cette rencontre.");
+        }
     }
 }

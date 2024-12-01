@@ -41,7 +41,7 @@ public class RencontreController {
         return ResponseEntity.ok(rencontreService.getRencontresDisponibles());
     }
 
-    @PostMapping("/play/{idRencontre}/choix")
+    @PostMapping("/play/choix")
 
     public ResponseEntity<Void> envoyerChoix(
             @RequestParam String clientId,
