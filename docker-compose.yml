@@ -1,6 +1,6 @@
 services:
   spring-app:
-    image: badzim/codelands:dpr-api-v2.5
+    image: badzim/codelands:dpr-api-latest
     build:
       context: . # Contexte du projet
       dockerfile: docker/Dockerfile # Chemin vers le Dockerfile
