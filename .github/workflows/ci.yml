@@ -41,14 +41,14 @@ jobs:
       # Étape 4 : Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t badzim/codelands:dpr-api-latest -f docker/Dockerfile .
-          docker tag badzim/codelands:dpr-api-latest badzim/codelands:dpr-api-v${{ github.run_number }}
+          docker build -t badzim/codelands:dpr-server-latest -f docker/Dockerfile .
+          docker tag badzim/codelands:dpr-server-latest badzim/codelands:dpr-server-v${{ github.run_number }}
 
       # Étape 5 : Push Docker image
       - name: Push Docker image
         run: |
-          docker push badzim/codelands:dpr-api-latest
-          docker push badzim/codelands:dpr-api-v${{ github.run_number }}
+          docker push badzim/codelands:dpr-server-latest
+          docker push badzim/codelands:dpr-server-v${{ github.run_number }}
             # Étape 1 : Configurer SSH
 
       - name: Set up SSH
@@ -59,4 +59,4 @@ jobs:
       # Étape 7 : Exécuter le script de mise à jour sur le serveur
       - name: Deploy to production
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_LOGIN }}@${{ secrets.SERVER_IP }} "/root/codelands/api/update.sh"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_LOGIN }}@${{ secrets.SERVER_IP }} "/root/codelands/server/update.sh"
