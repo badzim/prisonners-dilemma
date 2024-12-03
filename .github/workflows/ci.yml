@@ -59,4 +59,4 @@ jobs:
       # Étape 7 : Exécuter le script de mise à jour sur le serveur
       - name: Deploy to production
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_LOGIN }}@${{ secrets.SERVER_IP }} "/root/codelands/server/update.sh"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_LOGIN }}@${{ secrets.SERVER_IP }} "/root/codelands/dpr/server/update.sh"

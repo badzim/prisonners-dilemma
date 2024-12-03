@@ -1,4 +1,9 @@
-target/
+# Ignorer tout le contenu du dossier target
+target/*
+
+# Inclure les fichiers .jar dans target
+!target/*.jar
+
 .git
 .dockerignore
 docker-compose.yml
