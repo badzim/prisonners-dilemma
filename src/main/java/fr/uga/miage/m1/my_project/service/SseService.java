@@ -13,8 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
 @Data
+@Service
 public class SseService {
 
     private final Map<String, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
@@ -24,11 +24,11 @@ public class SseService {
     SseService() {
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
-                sendPingToClients(); // Appel à ta méthode
+                broadcast("ping", "ping");
             } catch (Exception e) {
-                log.error("Exception dans la tâche planifiée : {}", e.getMessage(), e);
+                log.error("Exception dans le pingScheduler lors de l'appel à broadcast", e);
             }
-        }, 0, 7, TimeUnit.SECONDS);
+        }, 1, 5, TimeUnit.SECONDS);
     }
 
     // Ajouter un SseEmitter pour un client donné
@@ -49,8 +49,6 @@ public class SseService {
 
     private SseEmitter getSseEmitter(String clientId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-
         // Nettoyage en cas de déconnexion
         emitter.onCompletion(() -> {
             log.info("SseEmitter pour le client {} complété.", clientId);
@@ -64,55 +62,46 @@ public class SseService {
             log.error("Erreur sur le SseEmitter du client {} : {}", clientId, e.getMessage());
             sseEmitters.remove(clientId);
         });
+        log.info("Callback onCompletion enregistré pour {}", clientId);
         return emitter;
     }
 
-    public void sendMessage(String clientId, String message) {
+    public void sendEvent(String clientId, String eventName, String data) {
         SseEmitter emitter = sseEmitters.get(clientId);
         if (emitter != null) {
             try {
-                emitter.send(SseEmitter.event().name("message").data(message));
+                emitter.send(SseEmitter.event().name(eventName).data(data));
                 log.debug("Message envoyé au client {}", clientId);
-            } catch (IOException e) {
-                log.error("Erreur lors de l'envoi du message au client {} : {}", clientId, e.getMessage());
-                emitter.completeWithError(e);
-                sseEmitters.remove(clientId);
+            } catch (IOException | IllegalStateException e) {
+                log.error("Erreur lors de l'envoi du message au client '{}' : {}", clientId, e.getMessage());
+                try {
+                    sseEmitters.remove(clientId);
+                    emitter.complete();
+                } catch (Exception ex) {
+                    log.error("Erreur inconnu 1 '{}' : {}", clientId, e.getMessage());
+                }
+
+            } catch (Exception e) {
+                log.error("Erreur inconnu '{}' : {}", clientId, e.getMessage());
+                try {
+                    sseEmitters.remove(clientId);
+                    emitter.complete();
+                }
+                catch (Exception ex) {
+                    log.error("Erreur inconnu 2 '{}' : {}", clientId, e.getMessage());
+                }
             }
         } else {
             log.warn("Impossible d'envoyer un message : client {} introuvable", clientId);
         }
     }
 
+
+
     // Diffuser un message à tous les clients connectés
-    public void broadcast(String message) {
+    public void broadcast(String eventName, String data) {
         sseEmitters.forEach((clientId, emitter) -> {
-            try {
-                emitter.send(SseEmitter.event().name("broadcast").data(message));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
-                sseEmitters.remove(clientId);
-            }
+            sendEvent(clientId, eventName, data);
         });
-    }
-
-    /**
-     * Envoyer un ping à tous les clients
-     */
-    private void sendPingToClients() {
-        try {
-
-
-            sseEmitters.forEach((clientId, emitter) -> {
-                try {
-                    emitter.send(SseEmitter.event().name("ping").data("ping"));
-                } catch (IOException e) {
-                    log.warn("Erreur lors de l'envoi au client {}: {}", clientId, e.getMessage());
-                    sseEmitters.get(clientId).complete(); // Planifie la suppression
-                }
-            });
-        } catch (Exception e) {
-            log.error("Exception dans sendPingToClients : {}", e.getMessage());
-            // L'exception est loggée mais ne stoppe pas le scheduler
-        }
     }
 }

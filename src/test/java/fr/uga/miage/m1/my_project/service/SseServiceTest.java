@@ -1,25 +1,32 @@
 package fr.uga.miage.m1.my_project.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@Slf4j
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SseServiceTest {
+
 
     private SseService sseService;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         sseService = new SseService();
     }
 
@@ -28,19 +35,18 @@ class SseServiceTest {
         // Ajouter un SseEmitter pour un client
         String clientId = "testClient";
         SseEmitter emitter = sseService.addSseEmitter(clientId);
-
+        ResponseEntity<SseEmitter> reponse = ResponseEntity.ok(emitter);
         // Vérifier que l'émetteur a bien été ajouté
         assertNotNull(emitter);
         assertTrue(sseService.getSseEmitters().containsKey(clientId));
-
         // Simuler une completion
         emitter.complete();
-
-        // je pense pas qu'il y'ai un moyen pour invoke onCompletion depuis un test...
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !sseService.getSseEmitters().containsKey(clientId));
+        assertFalse(sseService.getSseEmitters().containsKey(clientId));
     }
 
     @Test
-    void testSendMessageWithArgumentCaptor() throws IOException {
+    void testSendEventWithArgumentCaptor() throws IOException {
         // Mock SseEmitter
         SseEmitter emitter = mock(SseEmitter.class);
         String clientId = "testClient";
@@ -48,7 +54,7 @@ class SseServiceTest {
         sseService.getSseEmitters().put(clientId, emitter);
 
         // Appeler la méthode
-        sseService.sendMessage(clientId, message);
+        sseService.sendEvent(clientId, "message", message);
 
         // Capturer l'argument passé à send
         ArgumentCaptor<SseEmitter.SseEventBuilder> captor = ArgumentCaptor.forClass(SseEmitter.SseEventBuilder.class);
@@ -65,19 +71,19 @@ class SseServiceTest {
     }
 
     @Test
-    void testSendMessageToNonExistentClient() {
+    void testSendEventToNonExistentClient() {
         // Envoyer un message à un client qui n'existe pas
         String clientId = "nonExistentClient";
         String message = "Test message";
 
-        sseService.sendMessage(clientId, message);
+        sseService.sendEvent(clientId, "message", message);
 
         // Aucun émetteur, vérifier que rien ne plante
         assertFalse(sseService.getSseEmitters().containsKey(clientId));
     }
 
     @Test
-    void testSendMessageHandlesIOException() throws IOException {
+    void testSendEventHandlesIOException() throws IOException {
         // Ajouter un SseEmitter mocké pour simuler une erreur
         String clientId = "testClient";
         SseEmitter emitter = mock(SseEmitter.class);
@@ -87,15 +93,15 @@ class SseServiceTest {
 
         // Envoyer un message
         String message = "Test message";
-        sseService.sendMessage(clientId, message);
+        sseService.sendEvent(clientId, "message", message);
 
         // Vérifier que l'émetteur a été supprimé après l'erreur
         assertFalse(sseService.getSseEmitters().containsKey(clientId));
-        verify(emitter, times(1)).completeWithError(any(IOException.class));
+        verify(emitter, times(1)).complete();
     }
 
     @Test
-    void testBroadcastMessage() throws IOException {
+    void testBroadcastMessage() throws IOException, InterruptedException {
         // Ajouter plusieurs SseEmitters
         SseEmitter emitter1 = mock(SseEmitter.class);
         SseEmitter emitter2 = mock(SseEmitter.class);
@@ -104,7 +110,7 @@ class SseServiceTest {
 
         // Diffuser un message
         String message = "Broadcast message";
-        sseService.broadcast(message);
+        sseService.broadcast("broadcast", message);
 
         // Capturer les arguments passés aux méthodes send
         ArgumentCaptor<SseEmitter.SseEventBuilder> captor1 = ArgumentCaptor.forClass(SseEmitter.SseEventBuilder.class);
@@ -141,7 +147,7 @@ class SseServiceTest {
 
         // Diffuser un message
         String message = "Broadcast message";
-        sseService.broadcast(message);
+        sseService.broadcast("broadcast", message);
 
         // Capturer l'argument passé à emitter1
         ArgumentCaptor<SseEmitter.SseEventBuilder> captor1 = ArgumentCaptor.forClass(SseEmitter.SseEventBuilder.class);
@@ -150,11 +156,11 @@ class SseServiceTest {
         // Vérifier que le premier émetteur a reçu le message correctement
         Set<ResponseBodyEmitter.DataWithMediaType> eventData1 = captor1.getValue().build();
         assertTrue(eventData1.stream().anyMatch(data -> message.equals(data.getData())), "Message non trouvé pour emitter1");
-
+        await().atMost(10, TimeUnit.SECONDS).until(() -> !sseService.getSseEmitters().containsKey("client2"));
         // Vérifier que le deuxième émetteur a échoué et a été supprimé
         assertFalse(sseService.getSseEmitters().containsKey("client2"), "Emitter2 aurait dû être supprimé après l'erreur");
         verify(emitter2, times(1)).send(any(SseEmitter.SseEventBuilder.class));
-        verify(emitter2, times(1)).completeWithError(any(IOException.class));
+        verify(emitter2, times(1)).complete();
     }
 
 }
