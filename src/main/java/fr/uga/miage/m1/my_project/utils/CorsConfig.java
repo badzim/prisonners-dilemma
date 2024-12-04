@@ -16,7 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**") // Permet CORS sur tous les endpoints
                         .allowedOrigins(
                                 "https://client.dpr.codelands.me",
-                                "https://api.dpr.codelands.me"
+                                "http://localhost:5173/"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
