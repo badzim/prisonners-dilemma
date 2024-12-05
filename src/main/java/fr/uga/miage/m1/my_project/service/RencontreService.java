@@ -36,7 +36,7 @@ public class RencontreService {
         rencontre.setInitiateur(initiateur);
         rencontreManagerService.incrementNombreRencontreEnAttente();
         rencontreManagerService.addToRencontreEnAttente(rencontre);
-        sseService.sendEvent(clientId, "message", "Rencontre initiée. En attente d'un autre joueur.");
+        sseService.sendEvent(clientId, "game-initiated", "Rencontre initiée. En attente d'un autre joueur.");
         log.info("Rencontre initiée par le client {} avec {} tours.", clientId, nombreTours);
         return true;
     }
@@ -70,7 +70,7 @@ public class RencontreService {
         Joueur joueur = getJoueurFromRencontre(rencontre, clientId);
         Joueur joueurOppose = getJoueurOppose(rencontre ,joueur);
         if (action == TypeAction.ABONDONNER) {
-            sseService.sendEvent(joueur.getId(), "message", "Vous avez abandonné. Vous avez été remplacé par un robot.");
+            sseService.sendEvent(joueur.getId(), "player-abondonne", "Vous avez abandonné. Vous avez été remplacé par un robot.");
             String nomHumain = joueur.getNom();
             Strategie strategieChoisie = (strategie != null)
                     ? strategieFactoryService.getStrategie(strategie)
@@ -79,7 +79,7 @@ public class RencontreService {
             joueur = handleAbandon(rencontre, joueur);
             action = joueur.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
             if (joueurOppose instanceof Humain)
-                sseService.sendEvent(joueurOppose.getId(), "message", String.format("Le joueur %s a abandonné et a été remplacé par %s.", nomHumain, joueur.getNom()));
+                sseService.sendEvent(joueurOppose.getId(), "opposite-player-abondonne", String.format("Le joueur %s a abandonné et a été remplacé par %s.", nomHumain, joueur.getNom()));
         }
         tourService.setActionJoueur(joueur, rencontre, action);
         if (estTourPret(rencontre)) {
@@ -175,7 +175,7 @@ public class RencontreService {
     }
 
     private void notifierJoueur(Joueur joueur, int numeroTour, TypeAction actionJoueur, TypeAction actionAdversaire, int scoreTour) {
-        if (joueur instanceof Humain) sseService.sendEvent(joueur.getId(), "message", String.format(
+        if (joueur instanceof Humain) sseService.sendEvent(joueur.getId(), "tour-finished", String.format(
                 "Tour %d terminé. Vous avez %s, votre adversaire a %s. Score ce tour : %d. Score total : %d.",
                 numeroTour, actionJoueur, actionAdversaire, scoreTour, joueur.getScore()
         ));
@@ -239,11 +239,11 @@ public class RencontreService {
         int tourNumber = currentTour.getNumeroTour();
 
         if (currentTour.getActionInitiateur() == null && !(rencontre.getInitiateur() instanceof Robot)) {
-            sseService.sendEvent(rencontre.getInitiateur().getId(), "message", "Veuillez faire votre choix pour le tour " + tourNumber);
+            sseService.sendEvent(rencontre.getInitiateur().getId(), "make-choice", "Veuillez faire votre choix pour le tour " + tourNumber);
         }
 
         if (currentTour.getActionAdversaire() == null && !(rencontre.getAdversaire() instanceof Robot)) {
-            sseService.sendEvent(rencontre.getAdversaire().getId(), "message", "Veuillez faire votre choix pour le tour " + tourNumber);
+            sseService.sendEvent(rencontre.getAdversaire().getId(), "make-choice", "Veuillez faire votre choix pour le tour " + tourNumber);
         }
     }
 
@@ -255,11 +255,11 @@ public class RencontreService {
         Joueur adversaire = rencontre.getAdversaire();
         String resultatInitiateur = determinerResultat(initiateur, adversaire);
         String resultatAdversaire = determinerResultat(adversaire, initiateur);
-        sseService.sendEvent(initiateur.getId(), "message", String.format(
+        sseService.sendEvent(initiateur.getId(), "game-finished", String.format(
                 "Rencontre terminée. Vous avez %s. Score final : %d.",
                 resultatInitiateur, initiateur.getScore()
         ));
-        sseService.sendEvent(adversaire.getId(), "message", String.format(
+        sseService.sendEvent(adversaire.getId(), "game-finished", String.format(
                 "Rencontre terminée. Vous avez %s. Score final : %d.",
                 resultatAdversaire, adversaire.getScore()
         ));
