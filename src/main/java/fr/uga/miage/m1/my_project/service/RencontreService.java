@@ -57,8 +57,8 @@ public class RencontreService {
         rencontreManagerService.addToRencontreMap(clientId, rencontre);
         rencontreManagerService.addToRencontreMap(initiateur.getId(), rencontre);
         rencontre.setCurrentTour(new Tour(1));
-        sseService.sendEvent(initiateur.getId(), "message", "Un joueur a rejoint la rencontre. La partie commence !");
-        sseService.sendEvent(clientId, "message", "Vous avez rejoint la rencontre. La partie commence !");
+        sseService.sendEvent(initiateur.getId(), "game-started", "Un joueur a rejoint la rencontre. La partie commence !");
+        sseService.sendEvent(clientId, "game-started", "Vous avez rejoint la rencontre. La partie commence !");
     }
 
     /**
