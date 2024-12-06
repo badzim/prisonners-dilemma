@@ -29,9 +29,6 @@ public class SseController {
         } catch (IllegalStateException e) {
             log.error("Opération asynchrone déjà commencée ou terminée pour le client {}: {}", clientId, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Conflit pour état invalide
-        } catch (Exception e) {
-            log.error("Erreur inattendue pour le client {}: {}", clientId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
