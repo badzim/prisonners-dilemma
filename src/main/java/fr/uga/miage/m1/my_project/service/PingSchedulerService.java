@@ -21,7 +21,7 @@ public class PingSchedulerService {
         ScheduledExecutorService pingScheduler = Executors.newSingleThreadScheduledExecutor();
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
-                sseService.broadcast("ping", "ping");
+                sseService.handleDisconnectedPlayers();
             } catch (Exception e) {
                 log.error("Exception dans le pingScheduler lors de l'appel à broadcast", e);
             }

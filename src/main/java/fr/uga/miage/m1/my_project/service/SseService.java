@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,6 +55,49 @@ public class SseService {
         return emitter;
     }
 
+
+    // Diffuser un message à tous les clients connectés
+    public void broadcast(String eventName, String data) {
+        sseEmitters.forEach((clientId, emitter) -> sendEvent(clientId, eventName, data));
+    }
+
+    /**
+     * Vérifie tous les clients déconnectés et effectue un broadcast avec les IDs déconnectés.
+     */
+    public void handleDisconnectedPlayers() {
+        List<String> disconnectedClients = new ArrayList<>();
+
+        // Identifier les clients déconnectés
+        sseEmitters.forEach((clientId, emitter) -> {
+            if (!isEmitterActive(emitter)) {
+                disconnectedClients.add(clientId);
+            }
+        });
+
+        // Supprimer les émetteurs déconnectés en une seule opération
+        disconnectedClients.forEach(clientId -> safelyRemoveEmitter(clientId, sseEmitters.get(clientId)));
+
+        // Diffuser un événement à tous les clients connectés avec la liste des déconnectés
+        if (!disconnectedClients.isEmpty()) {
+            broadcast("broadcast-player-disconnected", String.join(",", disconnectedClients));
+        }
+    }
+
+    /**
+     * Vérifie si un SseEmitter est actif.
+     */
+    private boolean isEmitterActive(SseEmitter emitter) {
+        try {
+            emitter.send(SseEmitter.event().name("ping").data("test")); // Ping léger pour vérifier l'état
+            return true;
+        } catch (IOException | IllegalStateException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Envoie un événement à un client spécifique.
+     */
     public void sendEvent(String clientId, String eventName, String data) {
         SseEmitter emitter = sseEmitters.get(clientId);
         if (emitter == null) {
@@ -63,31 +108,32 @@ public class SseService {
             emitter.send(SseEmitter.event().name(eventName).data(data));
             log.debug("Message envoyé au client {}", clientId);
         } catch (IOException | IllegalStateException e) {
-
             handleSendError(clientId, emitter, e, "Erreur lors de l'envoi du message au client");
         } catch (Exception e) {
             handleSendError(clientId, emitter, e, "Erreur inconnue");
         }
     }
 
+    /**
+     * Gère une erreur d'envoi et retire l'émetteur du client en toute sécurité.
+     */
     private void handleSendError(String clientId, SseEmitter emitter, Exception e, String logMessage) {
         log.error("{} '{}' : {}", logMessage, clientId, e.getMessage());
         safelyRemoveEmitter(clientId, emitter);
     }
 
+    /**
+     * Supprime un émetteur en toute sécurité.
+     */
     private void safelyRemoveEmitter(String clientId, SseEmitter emitter) {
         try {
             sseEmitters.remove(clientId);
-            emitter.complete();
+            if (emitter != null) {
+                emitter.complete();
+            }
         } catch (Exception ex) {
             log.error("Erreur inconnue lors de la suppression de l'émetteur '{}' : {}", clientId, ex.getMessage());
         }
     }
 
-    // Diffuser un message à tous les clients connectés
-    public void broadcast(String eventName, String data) {
-        sseEmitters.forEach((clientId, emitter) -> {
-            sendEvent(clientId, eventName, data);
-        });
-    }
 }

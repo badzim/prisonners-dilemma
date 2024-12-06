@@ -10,7 +10,11 @@ import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,6 +26,56 @@ public class RencontreService {
     private final RencontreManagerService rencontreManagerService;
     private final JoueurService joueurService;
     private final StrategieFactoryService strategieFactoryService;
+
+
+
+    /**
+     * Récupère la liste des rencontres disponibles.
+     *
+     * @return Liste des rencontres disponibles sous forme de DTOs.
+     */
+    public List<RencontreDto> getRencontresDisponibles() {
+        sseService.handleDisconnectedPlayers();
+        removeDisconnectedRencontres();
+
+        return rencontreManagerService.getRencontresEnAttente()
+                .stream()
+                .map(RencontreMapper::toDto)
+                .toList(); // Renvoie la liste immuable car elle est destinée à être lue uniquement
+    }
+
+    /**
+     * Supprime les rencontres dont l'initiateur est déconnecté.
+     */
+    private void removeDisconnectedRencontres() {
+        List<Rencontre> rencontresActives = rencontreManagerService.getRencontresEnAttente()
+                .stream()
+                .filter(this::isInitiateurConnected)
+                .collect(Collectors.toCollection(ArrayList::new)); // Convertit en liste mutable
+
+        rencontreManagerService.setRencontresEnAttente(rencontresActives);
+    }
+
+    /**
+     * Vérifie si l'initiateur d'une rencontre est connecté.
+     *
+     * @param rencontre La rencontre à vérifier.
+     * @return {@code true} si l'initiateur est connecté, {@code false} sinon.
+     */
+    private boolean isInitiateurConnected(Rencontre rencontre) {
+        Joueur initiateur = rencontre.getInitiateur();
+        String idInitiateur = initiateur.getId();
+
+        // Vérifie si l'initiateur est connecté
+        boolean isConnected = sseService.getSseEmitters().containsKey(idInitiateur);
+
+        // Si déconnecté, met à jour l'état de l'initiateur
+        if (!isConnected) {
+            initiateur.setEtat(EtatJoueur.EN_MENU);
+        }
+
+        return isConnected;
+    }
 
     /**
      * Initialise une nouvelle rencontre.
@@ -37,6 +91,7 @@ public class RencontreService {
         rencontreManagerService.incrementNombreRencontreEnAttente();
         rencontreManagerService.addToRencontreEnAttente(rencontre);
         sseService.sendEvent(clientId, "game-initiated", "Rencontre initiée. En attente d'un autre joueur.");
+        sseService.broadcast("broadcast-game-initiated-all", "une rencontre à été initié par : " + clientId);
         log.info("Rencontre initiée par le client {} avec {} tours.", clientId, nombreTours);
         return true;
     }
@@ -59,6 +114,14 @@ public class RencontreService {
         rencontre.setCurrentTour(new Tour(1));
         sseService.sendEvent(initiateur.getId(), "game-started", "Un joueur a rejoint la rencontre. La partie commence !");
         sseService.sendEvent(clientId, "game-started", "Vous avez rejoint la rencontre. La partie commence !");
+        sseService.broadcast("broadcast-game-taken", "une rencontre à été lancé par : " + clientId);
+
+        if (sseService.getSseEmitters().get(initiateur.getId()) == null) {
+            initiateur.setStrategieAutomatique(strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANTALEATOIRE));
+            initiateur = handleAbandon(rencontre, initiateur);
+            TypeAction action = initiateur.jouer(getHistoriqueJoueur(rencontre, adversaire), getDernierResultatJoueur(rencontre, adversaire));
+            tourService.setActionJoueur(initiateur, rencontre, action);
+        }
     }
 
     /**
@@ -284,16 +347,6 @@ public class RencontreService {
         } else {
             return "fait match nul";
         }
-    }
-
-    /**
-     * Récupère la liste des rencontres disponibles.
-     */
-    public List<RencontreDto> getRencontresDisponibles() {
-        return rencontreManagerService.getRencontresEnAttente()
-                .stream()
-                .map(RencontreMapper::toDto)
-                .toList();
     }
 
     /**
