@@ -22,18 +22,13 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SseServiceTest {
 
-
+    @Autowired
     private SseService sseService;
-
-    @BeforeEach
-    public void setUp() {
-        sseService = new SseService();
-    }
 
     @Test
     void testAddSseEmitter() {
         // Ajouter un SseEmitter pour un client
-        String clientId = "testClient";
+        String clientId = "testClient1";
         SseEmitter emitter = sseService.addSseEmitter(clientId);
         ResponseEntity<SseEmitter> reponse = ResponseEntity.ok(emitter);
         // Vérifier que l'émetteur a bien été ajouté

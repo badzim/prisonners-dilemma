@@ -15,14 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JoueurService {
 
     // Map des joueurs connectés, avec leur ID comme clé
-    private final Map<String, Joueur> joueursConnectes = new ConcurrentHashMap<>();
+    private final Map<String, Joueur> joueurs = new ConcurrentHashMap<>();
 
     /**
      * Récupérer un joueur par son ID.
      */
     public Joueur getHumain(String clientId) {
-        return joueursConnectes.computeIfAbsent(clientId, k -> {
-            Joueur joueur1 = new Humain(clientId, "Joueur" + clientId);
+        return joueurs.computeIfAbsent(clientId, k -> {
+            Joueur joueur1 = new Humain(clientId, clientId);
             joueur1.setEtat(EtatJoueur.EN_MENU);
             return joueur1;
         });
