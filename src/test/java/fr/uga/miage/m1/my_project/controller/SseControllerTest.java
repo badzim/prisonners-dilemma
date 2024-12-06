@@ -58,10 +58,6 @@ class SseControllerTest {
                         error -> System.err.println("Erreur : " + error),
                         () -> System.out.println("Flux terminé")
                 );
-
-        // Attendre un peu pour s'assurer que la connexion est établie
-        Thread.sleep(1000);
-
         // Envoyer un événement
         sseService.sendEvent(clientId, "testEvent", "testData");
 

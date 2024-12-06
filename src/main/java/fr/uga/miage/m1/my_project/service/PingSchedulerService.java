@@ -1,6 +1,7 @@
 package fr.uga.miage.m1.my_project.service;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,24 @@ public class PingSchedulerService {
     private final SseService sseService;
 
 
+    private ScheduledExecutorService pingScheduler;
+
     @PostConstruct
     public void startScheduler() {
-        ScheduledExecutorService pingScheduler = Executors.newSingleThreadScheduledExecutor();
+        pingScheduler = Executors.newSingleThreadScheduledExecutor();
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
                 sseService.handleDisconnectedPlayers();
             } catch (Exception e) {
-                log.error("Exception dans le pingScheduler lors de l'appel à broadcast", e);
+                log.error("Exception in pingScheduler during call to broadcast", e);
             }
         }, 1, 5, TimeUnit.SECONDS);
+    }
+
+    @PreDestroy
+    public void stopScheduler() {
+        if (pingScheduler != null && !pingScheduler.isShutdown()) {
+            pingScheduler.shutdown();
+        }
     }
 }
