@@ -4,6 +4,7 @@ import fr.uga.miage.m1.my_project.exception.rest.InvalidActionRestException;
 import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
 import fr.uga.miage.m1.my_project.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.model.joueur.Joueur;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
+@Data
 public class JoueurService {
 
     // Map des joueurs connectés, avec leur ID comme clé
