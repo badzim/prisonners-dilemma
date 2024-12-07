@@ -8,14 +8,17 @@ import fr.uga.miage.m1.my_project.model.enums.TypeAction;
 import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.model.joueur.Joueur;
+import fr.uga.miage.m1.my_project.model.joueur.Robot;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +47,8 @@ class RencontreServiceTest {
 
     @MockBean
     private TourService tourService;
+    @Autowired
+    private StrategieFactoryService strategieFactoryService;
 
     @BeforeEach
     public void setUp() {
@@ -343,6 +348,57 @@ class RencontreServiceTest {
 
         // Vérifie que le tour est traité car il est prêt
         assertNotEquals(currentTour , rencontre.getCurrentTour());
+    }
+
+    @Test
+    void testHandleRobotActionAfterBothPlayersAbandon_WithInitialConnection() {
+        // Arrange
+        String initiateurId = "humanInitiator";
+        String adversaireId = "humanAdversary";
+
+        Humain initiateur = new Humain(initiateurId, "Initiateur Humain");
+        initiateur.setEtat(EtatJoueur.EN_PARTIE_INITIATEUR);
+
+        Humain adversaire = new Humain(adversaireId, "Adversaire Humain");
+        adversaire.setEtat(EtatJoueur.EN_PARTIE_ADVERSAIRE);
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setNombreTours(3);
+        rencontre.setInitiateur(initiateur);
+        rencontre.setAdversaire(adversaire);
+
+        Tour currentTour = new Tour(1);
+        rencontre.setCurrentTour(currentTour);
+
+        // Mock des SseEmitters pour simuler les connexions des deux joueurs
+        Map<String, SseEmitter> sseEmitters = new HashMap<>();
+        sseEmitters.put(initiateurId, new SseEmitter());
+        sseEmitters.put(adversaireId, new SseEmitter());
+        when(sseService.getSseEmitters()).thenReturn(sseEmitters);
+
+        // Mock des rencontres dans RencontreManagerService
+        when(rencontreManagerService.getRencontreMap()).thenReturn(Map.of(
+                initiateurId, rencontre,
+                adversaireId, rencontre
+        ));
+
+        // Act - Le premier joueur abandonne
+        rencontreService.enregistrerChoix(initiateurId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT);
+
+        // Vérifie que l'initiateur est remplacé par un robot
+        assertInstanceOf(Robot.class, rencontre.getInitiateur(), "L'initiateur doit être remplacé par un robot.");
+        Robot initiateurRobot = (Robot) rencontre.getInitiateur();
+
+        // Act - Le deuxième joueur abandonne
+        rencontreService.enregistrerChoix(adversaireId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT);
+
+        // Vérifie que l'adversaire est remplacé par un robot
+        assertTrue(rencontre.getAdversaire() instanceof Robot, "L'adversaire doit être remplacé par un robot.");
+        Robot adversaireRobot = (Robot) rencontre.getAdversaire();
+
+
+
+
     }
 
 
