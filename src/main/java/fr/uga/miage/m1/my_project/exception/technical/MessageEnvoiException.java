@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.exception;
+package fr.uga.miage.m1.my_project.exception.technical;
 
 public class MessageEnvoiException extends RuntimeException {
     public MessageEnvoiException(String message) {

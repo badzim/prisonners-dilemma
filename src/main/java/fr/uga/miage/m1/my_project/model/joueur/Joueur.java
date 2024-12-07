@@ -26,16 +26,4 @@ public abstract class Joueur {
     }
 
     public abstract TypeAction jouer(List<TypeAction> historiqueAdversaire, int dernierResultat);
-
-    public void sendMessage(Object obj)  {
-        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
-    }
-
-    public Object receiveMessage() {
-        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
-    }
-
-    public void close() {
-        throw new UnsupportedOperationException(NOT_SUPPORTED_YET);
-    }
 }

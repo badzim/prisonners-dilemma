@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AdaptatifStrategieTest {
@@ -17,18 +18,22 @@ class AdaptatifStrategieTest {
         strategie = new AdaptatifStrategie();
     }
 
+
     @Test
     void testInitialSequence() {
+        // Vérifier la séquence initiale (c, c, c, c, c, c, t, t, t, t, t)
         List<TypeAction> actions = new ArrayList<>();
+        int dernierResultat = 0;
 
-        // Tester les 6 premiers coups (COOPERER)
-        for (int i = 0; i < 6; i++) {
-            assertEquals(TypeAction.COOPERER, strategie.getAction(actions, 0), "Le coup initial doit être COOPERER.");
-        }
+        for (int i = 0; i < 11; i++) {
+            TypeAction action = strategie.getAction(actions, dernierResultat);
+            actions.add(action);
 
-        // Tester les 5 coups suivants (TRAHIR)
-        for (int i = 0; i < 5; i++) {
-            assertEquals(TypeAction.TRAHIR, strategie.getAction(actions, 0), "Le coup initial doit être TRAHIR.");
+            if (i < 6) {
+                assertEquals(TypeAction.COOPERER, action, "L'action devrait être COOPERER dans la séquence initiale.");
+            } else {
+                assertEquals(TypeAction.TRAHIR, action, "L'action devrait être TRAHIR dans la séquence initiale.");
+            }
         }
     }
 
@@ -106,5 +111,13 @@ class AdaptatifStrategieTest {
         TypeAction action12 =  strategie.getAction(actionsAdversaire, 1);
         assertEquals(TypeAction.TRAHIR, action12, "Le coup initial doit être COOPERER.");
 
+    }
+
+    @Test
+    void testEmptyActions() {
+        // Test avec une liste vide d'actions
+        List<TypeAction> actions = new ArrayList<>();
+        TypeAction action = strategie.getAction(actions, 0);
+        assertEquals(TypeAction.COOPERER, action, "Le premier coup devrait suivre la séquence initiale.");
     }
 }

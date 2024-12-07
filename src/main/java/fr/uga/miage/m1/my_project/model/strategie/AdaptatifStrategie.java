@@ -1,9 +1,11 @@
 package fr.uga.miage.m1.my_project.model.strategie;
 
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 public class AdaptatifStrategie extends Strategie {
 
     private int coupCount = 0; // Compteur pour suivre le nombre de tours

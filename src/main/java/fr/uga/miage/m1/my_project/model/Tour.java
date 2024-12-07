@@ -13,9 +13,18 @@ public class Tour {
     private TypeAction actionAdversaire;
     private int scoreInitiateur;
     private int scoreAdversaire;
+    private int numeroTour;
 
-    public Tour(TypeAction actionInitiateur, TypeAction actionAdversaire) {
-        this.actionInitiateur = actionInitiateur;
-        this.actionAdversaire = actionAdversaire;
+    public Tour() {
+        this.actionInitiateur = null;
+        this.actionAdversaire = null;
+        this.scoreInitiateur = 0;
+        this.scoreAdversaire = 0;
+        this.numeroTour = 0;
+    }
+
+    public Tour(int numeroTour) {
+        this();
+        this.numeroTour = numeroTour;
     }
 }
