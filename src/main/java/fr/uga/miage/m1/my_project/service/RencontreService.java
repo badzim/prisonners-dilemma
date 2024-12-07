@@ -7,6 +7,7 @@ import fr.uga.miage.m1.my_project.model.joueur.*;
 import fr.uga.miage.m1.my_project.model.strategie.*;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RencontreService {
 
     private final TourService tourService;
@@ -23,20 +25,6 @@ public class RencontreService {
     private final RencontreManagerService rencontreManagerService;
     private final JoueurService joueurService;
     private final StrategieFactoryService strategieFactoryService;
-
-
-
-    public RencontreService(TourService tourService,
-                            SseService sseService,
-                            RencontreManagerService rencontreManagerService,
-                            JoueurService joueurService,
-                            StrategieFactoryService strategieFactoryService) {
-        this.tourService = tourService;
-        this.sseService = sseService;
-        this.rencontreManagerService = rencontreManagerService;
-        this.joueurService = joueurService;
-        this.strategieFactoryService = strategieFactoryService;
-    }
 
     /* =====================================================
        Méthodes Publiques (Interfaces du Service)
@@ -87,6 +75,7 @@ public class RencontreService {
 
         if (action == TypeAction.ABONDONNER) {
             action = handlePlayerAbandon(rencontre, joueur, strategie, joueurOppose);
+            joueur = getJoueurOppose(rencontre, joueurOppose);
         }
 
         tourService.setActionJoueur(joueur, rencontre, action);
@@ -201,7 +190,8 @@ public class RencontreService {
 
         joueur.setStrategieAutomatique(strategieChoisie);
         Joueur robot = handleAbandon(rencontre, joueur);
-        TypeAction action = robot.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
+        joueur.setEtat(EtatJoueur.EN_MENU);
+        TypeAction action = joueur.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
 
         if (joueurOppose instanceof Humain) {
             sseService.sendEvent(joueurOppose.getId(), "opposite-player-abondonne", String.format(
