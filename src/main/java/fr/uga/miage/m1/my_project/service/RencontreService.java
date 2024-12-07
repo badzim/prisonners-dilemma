@@ -192,7 +192,7 @@ public class RencontreService {
        Méthodes Privées - Gestion Abandon / Actions Joueur
        ===================================================== */
 
-    private TypeAction handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TypeStrategie strategie, Joueur joueurOppose) {
+    public TypeAction handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TypeStrategie strategie, Joueur joueurOppose) {
         sseService.sendEvent(joueur.getId(), "player-abondonne", "Vous avez abandonné. Vous avez été remplacé par un robot.");
         String nomHumain = joueur.getNom();
         Strategie strategieChoisie = (strategie != null)
