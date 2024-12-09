@@ -12,7 +12,7 @@
 	<groupId>fr.uga.miage.m1</groupId>
 	<artifactId>prisonnier_g1_8</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>my_project</name>
+	<name>prisonnier_g1_8</name>
 	<description>Prisonnier dilema</description>
 	<packaging>jar</packaging>
 
