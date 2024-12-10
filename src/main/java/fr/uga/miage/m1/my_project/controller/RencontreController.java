@@ -42,7 +42,6 @@ public class RencontreController {
     }
 
     @PostMapping("/play/choix")
-
     public ResponseEntity<Void> envoyerChoix(
             @RequestParam String clientId,
             @RequestParam TypeAction action,
