@@ -20,9 +20,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -257,7 +255,7 @@ class RencontreServiceTest {
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Act
-        rencontreService.enregistrerChoix(clientId, action, strategie);
+        rencontreService.enregistrerChoix(clientId, action, strategie, "");
 
         // Assert
         // Vérifie que le joueur est bien trouvé et que l'action est enregistrée
@@ -293,18 +291,18 @@ class RencontreServiceTest {
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Mock handlePlayerAbandon pour retourner une action par défaut
-        when(rencontreService.handlePlayerAbandon(rencontre, joueur, strategie, adversaire))
+        when(rencontreService.handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"" ))
                 .thenReturn(TypeAction.COOPERER);
 
         // Mock pour sendEvent
         doNothing().when(sseService).sendEvent(anyString(), anyString(), anyString());
 
         // Act
-        rencontreService.enregistrerChoix(clientId, action, strategie);
+        rencontreService.enregistrerChoix(clientId, action, strategie,"" );
 
         // Assert
         // Vérifie que l'abandon a été géré
-        verify(rencontreService, times(1)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire);
+        verify(rencontreService, times(1)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"");
 
         // Vérifie que l'action enregistrée après l'abandon est COOPERER
         verify(tourService, times(1)).setActionJoueur(joueur, rencontre, TypeAction.COOPERER);
@@ -340,7 +338,7 @@ class RencontreServiceTest {
         when(rencontreService.estTourPret(rencontre)).thenReturn(true);
 
         // Act
-        rencontreService.enregistrerChoix(clientId, action, strategie);
+        rencontreService.enregistrerChoix(clientId, action, strategie, "");
 
         // Assert
         // Vérifie que l'action est enregistrée
@@ -383,14 +381,14 @@ class RencontreServiceTest {
         ));
 
         // Act - Le premier joueur abandonne
-        rencontreService.enregistrerChoix(initiateurId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT);
+        rencontreService.enregistrerChoix(initiateurId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT, "");
 
         // Vérifie que l'initiateur est remplacé par un robot
         assertInstanceOf(Robot.class, rencontre.getInitiateur(), "L'initiateur doit être remplacé par un robot.");
         Robot initiateurRobot = (Robot) rencontre.getInitiateur();
 
         // Act - Le deuxième joueur abandonne
-        rencontreService.enregistrerChoix(adversaireId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT);
+        rencontreService.enregistrerChoix(adversaireId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT, "");
 
         // Vérifie que l'adversaire est remplacé par un robot
         assertTrue(rencontre.getAdversaire() instanceof Robot, "L'adversaire doit être remplacé par un robot.");
@@ -446,6 +444,51 @@ class RencontreServiceTest {
         verify(sseService, times(1)).getSseEmitters();
     }
 
+
+
+
+
+    @Test
+    void testEnregistrerChoix_PlayerAbandons_WithG2_5() {
+        // Arrange
+        String clientId = "client123";
+        TypeAction action = TypeAction.ABONDONNER;
+        TypeStrategie strategie = TypeStrategie.TOUJOURSTRAHIR;
+
+        Humain joueur = new Humain(clientId, "Joueur Test");
+        Humain adversaire = new Humain("opponent456", "Adversaire Test");
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(joueur);
+        rencontre.setAdversaire(adversaire);
+
+        Tour currentTour = new Tour(1);
+        rencontre.setCurrentTour(currentTour);
+
+        // Historique initial
+        joueur.setHistoriqueJoueur(new ArrayList<>(List.of(TypeAction.COOPERER, TypeAction.TRAHIR)));
+        adversaire.setHistoriqueJoueur(new ArrayList<>(List.of(TypeAction.TRAHIR, TypeAction.COOPERER)));
+
+        // Mock des services
+        when(sseService.getSseEmitters()).thenReturn(Collections.singletonMap(clientId, new SseEmitter()));
+        when(rencontreManagerService.getRencontreMap()).thenReturn(Collections.singletonMap(clientId, rencontre));
+        when(rencontreService.estTourPret(rencontre)).thenReturn(false);
+
+        // Configuration pour le groupe G2_5
+        String groupId = "G2_5";
+
+        // Act
+        rencontreService.enregistrerChoix(clientId, action, strategie, groupId);
+
+        // Assert
+        // Vérifie que l'abandon a été géré
+        verify(rencontreService, times(1)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire, groupId);
+
+
+        // Vérifie l'envoi des événements d'abandon
+        verify(sseService, times(1)).sendEvent(eq(clientId), eq("player-abondonne"), anyString());
+        verify(sseService, times(1)).sendEvent(eq(adversaire.getId()), eq("opposite-player-abondonne"), anyString());
+    }
 
 
 

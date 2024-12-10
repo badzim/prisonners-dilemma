@@ -57,6 +57,14 @@
 			<version>1.18.36</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.example</groupId>
+			<artifactId>StrategiesLib_G2_5</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/src/main/resources/libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar</systemPath>
+		</dependency>
+
 
 	</dependencies>
 

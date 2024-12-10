@@ -46,8 +46,9 @@ public class RencontreController {
     public ResponseEntity<Void> envoyerChoix(
             @RequestParam String clientId,
             @RequestParam TypeAction action,
-            @RequestParam(required = false) TypeStrategie strategie) {
-        rencontreService.enregistrerChoix(clientId, action, strategie);
+            @RequestParam(required = false) TypeStrategie strategie,
+            @RequestParam (required = false) String groupId) {
+        rencontreService.enregistrerChoix(clientId, action, strategie, groupId);
         return ResponseEntity.ok().build();
     }
 }

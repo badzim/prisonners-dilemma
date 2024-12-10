@@ -54,4 +54,6 @@ public class TourService {
             throw new InvalidActionRestException("Le joueur ne fait pas partie de cette rencontre.");
         }
     }
+
+
 }
