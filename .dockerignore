@@ -3,7 +3,7 @@ target/*
 
 # Inclure les fichiers .jar dans target
 !target/*.jar
-!src/main/resources/libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar
+!target/classes/libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar
 
 .git
 .dockerignore

@@ -4,7 +4,7 @@
 *.iws
 *.jar
 # Inclure les fichiers .jar dans target
-!src/main/resources/libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar
+!libs/*.jar
 *.sw?
 *~
 .#*
