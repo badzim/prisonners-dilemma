@@ -41,16 +41,20 @@ public class PingSchedulerService {
                 });
 
                 if (!disconnectedClients.isEmpty()) {
-                    try {
-                        sseService.broadcast("broadcast-player-disconnected", String.join(",", disconnectedClients));
-                    } catch (Exception e) {
-                        log.error("Error while broadcasting disconnected clients: {}", e);
-                    }
+                    tryToBroadcast(disconnectedClients);
                 }
             } catch (Exception e) {
                 log.error("Exception in pingScheduler during call to handleDisconnectedPlayers", e);
             }
         }, 1, 5, TimeUnit.SECONDS);
+    }
+
+    private void tryToBroadcast(List<String> disconnectedClients) {
+        try {
+            sseService.broadcast("broadcast-player-disconnected", String.join(",", disconnectedClients));
+        } catch (Exception e) {
+            log.error("Error while broadcasting to disconnected clients: {}", e.getMessage());
+        }
     }
 
     @PreDestroy

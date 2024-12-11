@@ -75,7 +75,7 @@ public class SseService {
                     disconnectedClients.add(clientId);
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                log.warn("IOException occurred while sending to disconnected ppl : {}", e.getMessage());
             }
         });
 
@@ -118,16 +118,16 @@ public class SseService {
             emitter.send(SseEmitter.event().name(eventName).data(data));
             log.debug("Message envoyé au client {}", clientId);
         } catch (IOException | IllegalStateException e) {
-            handleSendError(clientId, emitter, e, "Erreur lors de l'envoi du message au client");
+            handleSendError(clientId, e, "Erreur lors de l'envoi du message au client");
         } catch (Exception e) {
-            handleSendError(clientId, emitter, e, "Erreur inconnue");
+            handleSendError(clientId, e, "Erreur inconnue");
         }
     }
 
     /**
      * Gère une erreur d'envoi et retire l'émetteur du client en toute sécurité.
      */
-    private void handleSendError(String clientId, SseEmitter emitter, Exception e, String logMessage) {
+    private void handleSendError(String clientId, Exception e, String logMessage) {
         log.error("{} '{}' : {}", logMessage, clientId, e.getMessage());
         safelyRemoveEmitter(clientId);
     }
