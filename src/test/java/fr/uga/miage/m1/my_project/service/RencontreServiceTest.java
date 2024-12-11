@@ -465,10 +465,6 @@ class RencontreServiceTest {
         Tour currentTour = new Tour(1);
         rencontre.setCurrentTour(currentTour);
 
-        // Historique initial
-        joueur.setHistoriqueJoueur(new ArrayList<>(List.of(TypeAction.COOPERER, TypeAction.TRAHIR)));
-        adversaire.setHistoriqueJoueur(new ArrayList<>(List.of(TypeAction.TRAHIR, TypeAction.COOPERER)));
-
         // Mock des services
         when(sseService.getSseEmitters()).thenReturn(Collections.singletonMap(clientId, new SseEmitter()));
         when(rencontreManagerService.getRencontreMap()).thenReturn(Collections.singletonMap(clientId, rencontre));
