@@ -3,6 +3,8 @@
 *.ipr
 *.iws
 *.jar
+# Inclure les fichiers .jar dans target
+!libs/*.jar
 *.sw?
 *~
 .#*

@@ -1,0 +1,18 @@
+package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
+
+import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class StrategieEnumAdaptateurGr2E5Test {
+
+    @Test
+    void testAdapter_ValidEnum() {
+        // Test avec une stratégie externe valide
+        fr.uga.strats.g5_2.enums.TypeStrategie externeEnum = fr.uga.strats.g5_2.enums.TypeStrategie.DONNANT_DONNANT;
+        TypeStrategie interneEnum = StrategieEnumAdaptateurGr2E5.adapter(externeEnum);
+
+        assertEquals(TypeStrategie.DONNANTDONNANT, interneEnum);
+    }
+}

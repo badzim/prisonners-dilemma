@@ -1,18 +1,22 @@
 package fr.uga.miage.m1.my_project.service;
 
 import fr.uga.miage.m1.my_project.exception.rest.*;
+import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieAdaptateurGr2E5;
+import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieEnumAdaptateurGr2E5;
 import fr.uga.miage.m1.my_project.model.*;
 import fr.uga.miage.m1.my_project.model.enums.*;
 import fr.uga.miage.m1.my_project.model.joueur.*;
 import fr.uga.miage.m1.my_project.model.strategie.*;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
+import fr.uga.strats.g5_2.factory.StrategieFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -67,14 +71,14 @@ public class RencontreService {
         handleInitiateurDeconnecteSiBesoin(rencontre);
     }
 
-    public synchronized void enregistrerChoix(String clientId, TypeAction action, TypeStrategie strategie) {
+    public synchronized void enregistrerChoix(String clientId, TypeAction action, TypeStrategie strategie, String groupId) {
         verifyClientConnected(clientId);
         Rencontre rencontre = getRencontreByClientId(clientId);
         Joueur joueur = getJoueurFromRencontre(rencontre, clientId);
         Joueur joueurOppose = getJoueurOppose(rencontre, joueur);
 
         if (action == TypeAction.ABONDONNER) {
-            action = handlePlayerAbandon(rencontre, joueur, strategie, joueurOppose);
+            action = handlePlayerAbandon(rencontre, joueur, strategie, joueurOppose, groupId);
             joueur = getJoueurOppose(rencontre, joueurOppose);
         }
 
@@ -181,18 +185,30 @@ public class RencontreService {
        Méthodes Privées - Gestion Abandon / Actions Joueur
        ===================================================== */
 
-    public TypeAction handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TypeStrategie strategie, Joueur joueurOppose) {
+    public TypeAction handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TypeStrategie strategie, Joueur joueurOppose, String groupId) {
         sseService.sendEvent(joueur.getId(), "player-abondonne", "Vous avez abandonné. Vous avez été remplacé par un robot.");
         String nomHumain = joueur.getNom();
-        Strategie strategieChoisie = (strategie != null)
-                ? strategieFactoryService.getStrategie(strategie)
-                : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
 
+        Strategie strategieChoisie = null;
+        if (!Objects.equals(groupId, "G2_5") && !Objects.equals(groupId, "G2_10")) {
+            strategieChoisie = (strategie != null)
+                    ? strategieFactoryService.getStrategie(strategie)
+                    : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
+        }
+        else {
+            if (Objects.equals(groupId, "G2_5")) {
+                fr.uga.strats.g5_2.models.Strategie strategieExtern = StrategieFactory.creeStrategie(StrategieEnumAdaptateurGr2E5.adapterInverse(strategie));
+                strategieChoisie = new StrategieAdaptateurGr2E5(strategieExtern);
+            }
+        }
         joueur.setStrategieAutomatique(strategieChoisie);
-        Joueur robot = handleAbandon(rencontre, joueur);
-        joueur.setEtat(EtatJoueur.EN_MENU);
-        TypeAction action = joueur.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
 
+        joueur.setHistoriqueJoueur(getHistoriqueJoueur(rencontre, joueur));
+
+        Joueur robot = handleAbandon(rencontre, joueur);
+        TypeAction action = robot.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
+
+        joueur.setEtat(EtatJoueur.EN_MENU);
         if (joueurOppose instanceof Humain) {
             sseService.sendEvent(joueurOppose.getId(), "opposite-player-abondonne", String.format(
                     "Le joueur %s a abandonné et a été remplacé par %s.", nomHumain, robot.getNom()

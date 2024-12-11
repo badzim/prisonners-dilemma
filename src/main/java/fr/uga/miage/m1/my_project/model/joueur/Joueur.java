@@ -4,6 +4,8 @@ import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
 import fr.uga.miage.m1.my_project.model.strategie.Strategie;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -14,11 +16,13 @@ public abstract class Joueur {
     protected int score;
     protected Strategie strategieAutomatique;
     protected EtatJoueur etat;
+    protected List<TypeAction> historiqueJoueur;
 
     protected Joueur(String id, String nom) {
         this.id = id;
         this.nom = nom;
         this.score = 0;
+        historiqueJoueur = new ArrayList<>();
     }
 
     public void addScore(int s) {
