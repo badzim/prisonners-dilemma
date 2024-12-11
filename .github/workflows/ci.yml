@@ -28,12 +28,10 @@ jobs:
 
       - name: Install local library
         run: |
-          mvn install:install-file \ 
-          -Dfile=libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar \
+          mvn install:install-file -Dfile=libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar \
           -DgroupId=org.example -DartifactId=StrategiesLib_G2_5 \
           -Dversion=1.0-SNAPSHOT -Dpackaging=jar
-          mvn install:install-file \
-          -Dfile=libs/G2_10/strategies_g2_10.jar \
+          mvn install:install-file -Dfile=libs/G2_10/strategies_g2_10.jar \
           -DpomFile=libs/G2_10/pom.xml
 
       - name: Build and run tests
