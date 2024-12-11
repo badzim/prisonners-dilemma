@@ -1,5 +1,8 @@
 package fr.uga.miage.m1.my_project.service;
 
+import fr.uga.miage.m1.my_project.exception.rest.RencontreNotFoundRestException;
+import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
@@ -7,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,19 +20,35 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Data
 public class PingSchedulerService {
+
     private final SseService sseService;
-
-
     private ScheduledExecutorService pingScheduler;
+    private final RencontreService rencontreService;
 
     @PostConstruct
     public void startScheduler() {
         pingScheduler = Executors.newSingleThreadScheduledExecutor();
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
-                sseService.handleDisconnectedPlayers();
+                List<String> disconnectedClients = sseService.handleDisconnectedPlayers();
+                disconnectedClients.forEach(clientId -> {
+                    try {
+                        sseService.safelyRemoveEmitter(clientId);
+                        rencontreService.handleDesconnectedPlayer(clientId);
+                    } catch (Exception e) {
+                        log.error("Error while handling disconnected client: {}", clientId, e);
+                    }
+                });
+
+                if (!disconnectedClients.isEmpty()) {
+                    try {
+                        sseService.broadcast("broadcast-player-disconnected", String.join(",", disconnectedClients));
+                    } catch (Exception e) {
+                        log.error("Error while broadcasting disconnected clients: {}", e);
+                    }
+                }
             } catch (Exception e) {
-                log.error("Exception in pingScheduler during call to broadcast", e);
+                log.error("Exception in pingScheduler during call to handleDisconnectedPlayers", e);
             }
         }, 1, 5, TimeUnit.SECONDS);
     }

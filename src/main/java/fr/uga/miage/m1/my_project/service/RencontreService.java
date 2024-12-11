@@ -182,7 +182,36 @@ public class RencontreService {
                     getDernierResultatJoueur(rencontre, adversaire)
             );
             tourService.setActionJoueur(initiateur, rencontre, action);
+
         }
+    }
+
+    public void handleDesconnectedPlayer(String clientId) {
+        Joueur joueur = joueurService.getHumain(clientId);
+        Rencontre rencontre;
+        try {
+            rencontre = getRencontreByClientId(clientId);
+        } catch (RencontreNotFoundRestException e) {
+            log.warn("rencontre non disponible");
+            return;
+        }
+
+        if (sseService.getSseEmitters().get(joueur.getId()) == null) {
+            joueur.setStrategieAutomatique(strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANTALEATOIRE));
+
+            joueur = handleAbandon(rencontre, joueur);
+
+            Joueur adversaire = rencontre.getAdversaire();
+            TypeAction action = joueur.jouer(
+                    getHistoriqueJoueur(rencontre, adversaire),
+                    getDernierResultatJoueur(rencontre, adversaire));
+            tourService.setActionJoueur(joueur, rencontre, action);
+
+            if (estTourPret(rencontre)) {
+                processTour(rencontre);
+            }
+        }
+
     }
 
     /* =====================================================

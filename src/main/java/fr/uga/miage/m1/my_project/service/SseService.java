@@ -64,35 +64,45 @@ public class SseService {
     /**
      * Vérifie tous les clients déconnectés et effectue un broadcast avec les IDs déconnectés.
      */
-    public void handleDisconnectedPlayers() {
+    public List<String> handleDisconnectedPlayers() {
         List<String> disconnectedClients = new ArrayList<>();
 
         // Identifier les clients déconnectés
+
         sseEmitters.forEach((clientId, emitter) -> {
-            if (!isEmitterActive(emitter)) {
-                disconnectedClients.add(clientId);
+            try {
+                if (!isEmitterActive(emitter)) {
+                    disconnectedClients.add(clientId);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         });
 
-        // Supprimer les émetteurs déconnectés en une seule opération
-        disconnectedClients.forEach(clientId -> safelyRemoveEmitter(clientId, sseEmitters.get(clientId)));
 
-        // Diffuser un événement à tous les clients connectés avec la liste des déconnectés
-        if (!disconnectedClients.isEmpty()) {
-            broadcast("broadcast-player-disconnected", String.join(",", disconnectedClients));
-        }
+
+        return disconnectedClients;
     }
 
     /**
      * Vérifie si un SseEmitter est actif.
      */
-    private boolean isEmitterActive(SseEmitter emitter) {
-        try {
-            emitter.send(SseEmitter.event().name("ping").data("test")); // Ping léger pour vérifier l'état
-            return true;
-        } catch (IOException | IllegalStateException e) {
-            return false;
-        }
+    private boolean isEmitterActive(SseEmitter emitter) throws IOException{
+
+            try {
+                // Attempt a lightweight "ping" to check if the connection is still open
+                emitter.send(SseEmitter.event().name("ping").data("test"));
+            } catch (IOException | IllegalStateException e) {
+                // This occurs if the emitter is in an invalid state (e.g., already completed)
+                log.warn("Emitter is in an invalid state: {}", e.getMessage());
+                return false;
+            } catch (Exception e) {
+                // IOException indicates a broken connection or client disconnect
+                log.warn("IOException occurred while sending to emitter: {}", e.getMessage());
+                return false;
+            }
+
+        return true;
     }
 
     /**
@@ -119,14 +129,15 @@ public class SseService {
      */
     private void handleSendError(String clientId, SseEmitter emitter, Exception e, String logMessage) {
         log.error("{} '{}' : {}", logMessage, clientId, e.getMessage());
-        safelyRemoveEmitter(clientId, emitter);
+        safelyRemoveEmitter(clientId);
     }
 
     /**
      * Supprime un émetteur en toute sécurité.
      */
-    private void safelyRemoveEmitter(String clientId, SseEmitter emitter) {
+    public void safelyRemoveEmitter(String clientId) {
         try {
+            SseEmitter emitter = sseEmitters.get(clientId);
             sseEmitters.remove(clientId);
             if (emitter != null) {
                 emitter.complete();
