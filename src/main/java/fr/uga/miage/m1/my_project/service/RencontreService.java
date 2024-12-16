@@ -1,6 +1,10 @@
 package fr.uga.miage.m1.my_project.service;
 
+import fr.uga.m1miage.pc.strategy.Strategy;
+import fr.uga.m1miage.pc.strategy.StrategyFactory;
 import fr.uga.miage.m1.my_project.exception.rest.*;
+import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieAdaptateurGr2E10;
+import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieEnumAdaptateurGr2E10;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieAdaptateurGr2E5;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieEnumAdaptateurGr2E5;
 import fr.uga.miage.m1.my_project.model.*;
@@ -178,7 +182,36 @@ public class RencontreService {
                     getDernierResultatJoueur(rencontre, adversaire)
             );
             tourService.setActionJoueur(initiateur, rencontre, action);
+
         }
+    }
+
+    public void handleDesconnectedPlayer(String clientId) {
+        Joueur joueur = joueurService.getHumain(clientId);
+        Rencontre rencontre;
+        try {
+            rencontre = getRencontreByClientId(clientId);
+        } catch (RencontreNotFoundRestException e) {
+            log.warn("rencontre non disponible");
+            return;
+        }
+
+        if (sseService.getSseEmitters().get(joueur.getId()) == null) {
+            joueur.setStrategieAutomatique(strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANTALEATOIRE));
+
+            joueur = handleAbandon(rencontre, joueur);
+
+            Joueur adversaire = rencontre.getAdversaire();
+            TypeAction action = joueur.jouer(
+                    getHistoriqueJoueur(rencontre, adversaire),
+                    getDernierResultatJoueur(rencontre, adversaire));
+            tourService.setActionJoueur(joueur, rencontre, action);
+
+            if (estTourPret(rencontre)) {
+                processTour(rencontre);
+            }
+        }
+
     }
 
     /* =====================================================
@@ -189,21 +222,29 @@ public class RencontreService {
         sseService.sendEvent(joueur.getId(), "player-abondonne", "Vous avez abandonné. Vous avez été remplacé par un robot.");
         String nomHumain = joueur.getNom();
 
-        Strategie strategieChoisie = null;
-        if (!Objects.equals(groupId, "G2_5") && !Objects.equals(groupId, "G2_10")) {
-            strategieChoisie = (strategie != null)
-                    ? strategieFactoryService.getStrategie(strategie)
+        Strategie strategieChoisie;
+        try {
+            strategieChoisie = switch (groupId) {
+                case "G2_5" -> {
+                    fr.uga.strats.g5_2.models.Strategie strategieExternG2E5 = StrategieFactory.creeStrategie(StrategieEnumAdaptateurGr2E5.adapterInverse(strategie));
+                    yield new StrategieAdaptateurGr2E5(strategieExternG2E5, getHistoriqueJoueur(rencontre, joueur), joueur.getEtat() == EtatJoueur.EN_PARTIE_INITIATEUR);
+                }
+                case "G2_10" -> {
+                    Strategy strategieExternG2E10 = StrategyFactory.createStrategy(StrategieEnumAdaptateurGr2E10.adapterInverse(strategie));
+                    yield new StrategieAdaptateurGr2E10(strategieExternG2E10, getHistoriqueJoueur(rencontre, joueur));
+                }
+                default -> (strategie != null)
+                        ? strategieFactoryService.getStrategie(strategie)
+                        : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
+            };
+        } catch (NullPointerException e) {
+            strategieChoisie =(strategie != null) ? strategieFactoryService.getStrategie(strategie)
                     : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
-        }
-        else {
-            if (Objects.equals(groupId, "G2_5")) {
-                fr.uga.strats.g5_2.models.Strategie strategieExtern = StrategieFactory.creeStrategie(StrategieEnumAdaptateurGr2E5.adapterInverse(strategie));
-                strategieChoisie = new StrategieAdaptateurGr2E5(strategieExtern);
-            }
-        }
-        joueur.setStrategieAutomatique(strategieChoisie);
 
-        joueur.setHistoriqueJoueur(getHistoriqueJoueur(rencontre, joueur));
+        }
+
+
+        joueur.setStrategieAutomatique(strategieChoisie);
 
         Joueur robot = handleAbandon(rencontre, joueur);
         TypeAction action = robot.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));

@@ -5,6 +5,7 @@
 *.jar
 # Inclure les fichiers .jar dans target
 !libs/*.jar
+!libs/G2_10/*.jar
 *.sw?
 *~
 .#*

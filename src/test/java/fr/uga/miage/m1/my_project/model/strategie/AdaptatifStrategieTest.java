@@ -1,5 +1,6 @@
 package fr.uga.miage.m1.my_project.model.strategie;
 
+import fr.uga.m1miage.pc.strategy.Pavlov;
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,4 +121,5 @@ class AdaptatifStrategieTest {
         TypeAction action = strategie.getAction(actions, 0);
         assertEquals(TypeAction.COOPERER, action, "Le premier coup devrait suivre la séquence initiale.");
     }
+
 }

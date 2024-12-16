@@ -2,7 +2,6 @@ package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
 import fr.uga.miage.m1.my_project.model.enums.TypeAction;
 import fr.uga.strats.g5_2.enums.Decision;
-
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -10,14 +9,14 @@ public class StrategieDecisionAdaptateurGr2E5 {
     private static final Map<Decision, TypeAction> correspondance = new EnumMap<>(Decision.class);
     private static final Map<TypeAction, Decision> correspondanceDecision = new EnumMap<>(TypeAction.class);
 
-    private StrategieDecisionAdaptateurGr2E5(){}
-
     static {
         correspondance.put(Decision.COOPERER, TypeAction.COOPERER);
         correspondance.put(Decision.TRAHIR, TypeAction.TRAHIR);
-        correspondanceDecision.put(TypeAction.COOPERER, Decision.COOPERER);
-        correspondanceDecision.put(TypeAction.TRAHIR, Decision.TRAHIR);
+
+        correspondance.forEach((decision, typeAction) -> correspondanceDecision.put(typeAction, decision));
     }
+
+    private StrategieDecisionAdaptateurGr2E5(){}
 
 
     public static TypeAction adapter(Decision externeEnum) {

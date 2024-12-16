@@ -62,7 +62,11 @@
 			<artifactId>StrategiesLib_G2_5</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.example</groupId>
+			<artifactId>StrategiesLib_G2_10</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
