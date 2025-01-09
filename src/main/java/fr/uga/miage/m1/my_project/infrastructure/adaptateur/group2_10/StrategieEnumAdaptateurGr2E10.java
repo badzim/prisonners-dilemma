@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10;
 
 import fr.uga.m1miage.pc.strategy.StrategyType;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeStrategie;
 
 import java.util.EnumMap;
 import java.util.Map;

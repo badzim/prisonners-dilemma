@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10;
 
 
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

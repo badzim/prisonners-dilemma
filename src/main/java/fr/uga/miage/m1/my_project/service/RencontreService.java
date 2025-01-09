@@ -2,15 +2,18 @@ package fr.uga.miage.m1.my_project.service;
 
 import fr.uga.m1miage.pc.strategy.Strategy;
 import fr.uga.m1miage.pc.strategy.StrategyFactory;
-import fr.uga.miage.m1.my_project.exception.rest.*;
+import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
+import fr.uga.miage.m1.my_project.core.domain.model.Tour;
+import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
+import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
+import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieAdaptateurGr2E10;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieEnumAdaptateurGr2E10;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieAdaptateurGr2E5;
 import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieEnumAdaptateurGr2E5;
-import fr.uga.miage.m1.my_project.model.*;
-import fr.uga.miage.m1.my_project.model.enums.*;
-import fr.uga.miage.m1.my_project.model.joueur.*;
-import fr.uga.miage.m1.my_project.model.strategie.*;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.*;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.*;
+import fr.uga.miage.m1.my_project.core.domain.model.strategie.*;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
 import fr.uga.strats.g5_2.factory.StrategieFactory;
@@ -20,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,15 +50,14 @@ public class RencontreService {
 
     public boolean initierRencontre(String clientId, int nombreTours) {
         verifyClientConnected(clientId);
-        joueurService.joueurEstEnMenu(clientId);
-
-        Joueur initiateur = joueurService.getHumain(clientId);
+        Joueur initiateur = joueurService.getJoueurById(clientId);
+        if (initiateur.getEtat() != EtatJoueur.EN_MENU) {
+            throw new InvalidActionRestException("Le joueur doit être dans le menu");
+        }
         initiateur.setEtat(EtatJoueur.EN_ATTENTE);
-
         Rencontre rencontre = createNewRencontre(nombreTours, initiateur);
         rencontreManagerService.incrementNombreRencontreEnAttente();
         rencontreManagerService.addToRencontreEnAttente(rencontre);
-
         sseService.sendEvent(clientId, "game-initiated", "Rencontre initiée. En attente d'un autre joueur.");
         sseService.broadcast("broadcast-game-initiated-all", "une rencontre à été initié par : " + clientId);
         log.info("Rencontre initiée par le client {} avec {} tours.", clientId, nombreTours);
@@ -66,11 +67,11 @@ public class RencontreService {
 
     public void rejoindreRencontre(String clientId, String idRencontre) {
         verifyClientConnected(clientId);
-        joueurService.joueurEstEnMenu(clientId);
-
+        Joueur adversaire = joueurService.getJoueurById(clientId);
+        if (adversaire.getEtat() != EtatJoueur.EN_MENU) {
+            throw new InvalidActionRestException("Le joueur doit être dans le menu");
+        }
         Rencontre rencontre = validateRejoindreRencontre(clientId, idRencontre);
-        Joueur adversaire = joueurService.getHumain(clientId);
-
         initializeJoinedRencontre(rencontre, adversaire, clientId);
         handleInitiateurDeconnecteSiBesoin(rencontre);
     }
@@ -187,7 +188,7 @@ public class RencontreService {
     }
 
     public void handleDesconnectedPlayer(String clientId) {
-        Joueur joueur = joueurService.getHumain(clientId);
+        Joueur joueur = joueurService.getJoueurById(clientId);
         Rencontre rencontre;
         try {
             rencontre = getRencontreByClientId(clientId);

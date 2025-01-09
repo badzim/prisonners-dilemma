@@ -1,10 +1,9 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
-import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
-import fr.uga.miage.m1.my_project.model.joueur.Robot;
-import fr.uga.strats.g5_2.enums.Decision;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.EtatJoueur;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Robot;
 import fr.uga.strats.g5_2.factory.StrategieFactory;
 import fr.uga.strats.g5_2.models.Strategie;
 import fr.uga.strats.g5_2.models.Tour;

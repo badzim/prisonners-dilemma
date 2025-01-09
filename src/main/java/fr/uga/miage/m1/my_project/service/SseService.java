@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.exception.rest.ClientIdUsedRestException;
+import fr.uga.miage.m1.my_project.core.exception.rest.ClientIdUsedRestException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

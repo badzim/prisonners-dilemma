@@ -1,14 +1,15 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.exception.rest.RencontreNotFoundRestException;
-import fr.uga.miage.m1.my_project.model.Rencontre;
-import fr.uga.miage.m1.my_project.model.Tour;
-import fr.uga.miage.m1.my_project.model.enums.EtatJoueur;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
-import fr.uga.miage.m1.my_project.model.joueur.Humain;
-import fr.uga.miage.m1.my_project.model.joueur.Joueur;
-import fr.uga.miage.m1.my_project.model.joueur.Robot;
+import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
+import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
+import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
+import fr.uga.miage.m1.my_project.core.domain.model.Tour;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.EtatJoueur;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Robot;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,7 +95,7 @@ class RencontreServiceTest {
 
         // Mock comportement
         when(sseService.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter())); // Pour éviter l'exception dans verifyClientConnected
-        when(joueurService.getHumain(clientId)).thenReturn(mockJoueur);
+        when(joueurService.getJoueurById(clientId)).thenReturn(mockJoueur);
 
         // Act
         boolean result = rencontreService.initierRencontre(clientId, nombreTours);
@@ -104,8 +105,9 @@ class RencontreServiceTest {
 
         // Vérifications des appels
         verify(sseService, times(1)).getSseEmitters(); // Vérifie que le client est connecté
-        verify(joueurService, times(1)).joueurEstEnMenu(clientId); // Vérifie que le joueur est en menu
-        verify(joueurService, times(1)).getHumain(clientId); // Vérifie que le joueur est récupéré
+        verify(joueurService, times(1)).getJoueurById(clientId); // Vérifie que le joueur est récupéré
+        assertSame(EtatJoueur.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
+
 
         // Vérifie que la rencontre a été ajoutée et que le compteur d'attente a été incrémenté
         verify(rencontreManagerService, times(1)).incrementNombreRencontreEnAttente();
@@ -144,8 +146,7 @@ class RencontreServiceTest {
         emitters.put(adversaireId, new SseEmitter());
 
         when(sseService.getSseEmitters()).thenReturn(emitters);
-        doNothing().when(joueurService).joueurEstEnMenu(anyString());
-        when(joueurService.getHumain(adversaireId)).thenReturn(adversaire);
+        when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
         when(rencontreManagerService.findRencontreEnAttenteById(idRencontre)).thenReturn(rencontre);
 
         // Act
@@ -160,8 +161,7 @@ class RencontreServiceTest {
 
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseService, times(3)).getSseEmitters(); // Vérifie la connexion du client
-        verify(joueurService, times(1)).joueurEstEnMenu(adversaireId); // Vérifie que le joueur est en menu
-        verify(joueurService, times(1)).getHumain(adversaireId); // Vérifie que le joueur est récupéré
+        verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
         verify(rencontreManagerService, times(1)).findRencontreEnAttenteById(idRencontre); // Vérifie que la rencontre est récupérée
 
         // Vérifie que les états des joueurs sont correctement mis à jour
@@ -199,8 +199,7 @@ class RencontreServiceTest {
         emitters.put(adversaireId, new SseEmitter());
 
         when(sseService.getSseEmitters()).thenReturn(emitters);
-        doNothing().when(joueurService).joueurEstEnMenu(anyString());
-        when(joueurService.getHumain(adversaireId)).thenReturn(adversaire);
+        when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
         when(rencontreManagerService.findRencontreEnAttenteById(idRencontre)).thenReturn(rencontre);
 
         // Act
@@ -215,8 +214,7 @@ class RencontreServiceTest {
 
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseService, times(3)).getSseEmitters(); // Vérifie la connexion du client
-        verify(joueurService, times(1)).joueurEstEnMenu(adversaireId); // Vérifie que le joueur est en menu
-        verify(joueurService, times(1)).getHumain(adversaireId); // Vérifie que le joueur est récupéré
+        verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
         verify(rencontreManagerService, times(1)).findRencontreEnAttenteById(idRencontre); // Vérifie que la rencontre est récupérée
 
         // Vérifie que les états des joueurs sont correctement mis à jour
@@ -412,7 +410,7 @@ class RencontreServiceTest {
 
         // Mock comportement
         when(sseService.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter())); // Pour éviter l'exception dans verifyClientConnected
-        when(joueurService.getHumain(clientId)).thenReturn(mockJoueur);
+        when(joueurService.getJoueurById(clientId)).thenReturn(mockJoueur);
 
         // Act
         boolean result = rencontreService.initierRencontre(clientId, nombreTours);
@@ -422,10 +420,8 @@ class RencontreServiceTest {
 
         // Vérifications des appels
         verify(sseService, times(1)).getSseEmitters(); // Vérifie que le client est connecté
-        verify(joueurService, times(1)).joueurEstEnMenu(clientId); // Vérifie que le joueur est en menu
-        verify(joueurService, times(1)).getHumain(clientId); // Vérifie que le joueur est récupéré
-
-        assertDoesNotThrow(() -> rencontreService.initierRencontre(clientId, 3));
+        verify(joueurService, times(1)).getJoueurById(clientId); // Vérifie que le joueur est récupéré
+        assertSame(EtatJoueur.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
     }
 
     @Test

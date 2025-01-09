@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.controller;
 
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeStrategie;
 import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
 import fr.uga.miage.m1.my_project.service.RencontreService;
 import lombok.RequiredArgsConstructor;

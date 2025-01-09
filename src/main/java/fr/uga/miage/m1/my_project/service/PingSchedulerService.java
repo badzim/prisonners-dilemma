@@ -1,8 +1,5 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.exception.rest.RencontreNotFoundRestException;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.enums.TypeStrategie;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;

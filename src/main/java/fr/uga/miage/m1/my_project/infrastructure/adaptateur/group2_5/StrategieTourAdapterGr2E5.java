@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
 import fr.uga.strats.g5_2.models.Tour;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ public class StrategieTourAdapterGr2E5 extends Tour {
 
     private StrategieTourAdapterGr2E5(){}
     // Constructeur de l'adaptateur
-    public StrategieTourAdapterGr2E5(fr.uga.miage.m1.my_project.model.Tour tourIntern) {
+    public StrategieTourAdapterGr2E5(fr.uga.miage.m1.my_project.core.domain.model.Tour tourIntern) {
         super(
                 StrategieDecisionAdaptateurGr2E5.adapter(tourIntern.getActionInitiateur()),
                 StrategieDecisionAdaptateurGr2E5.adapter(tourIntern.getActionAdversaire())
@@ -17,7 +17,7 @@ public class StrategieTourAdapterGr2E5 extends Tour {
     }
 
     // Méthode statique pour adapter un objet `Tour` interne vers un `Tour` externe
-    public static Tour adapter(fr.uga.miage.m1.my_project.model.Tour tourIntern) {
+    public static Tour adapter(fr.uga.miage.m1.my_project.core.domain.model.Tour tourIntern) {
         return new StrategieTourAdapterGr2E5(tourIntern);
     }
 

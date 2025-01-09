@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.strategie.Strategie;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.strategie.Strategie;
 import fr.uga.strats.g5_2.enums.Decision;
 import fr.uga.strats.g5_2.models.Tour;
 import lombok.Getter;

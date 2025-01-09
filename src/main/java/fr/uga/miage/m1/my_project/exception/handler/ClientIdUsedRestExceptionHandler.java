@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.exception.handler;
 
-import fr.uga.miage.m1.my_project.exception.rest.ClientIdUsedRestException;
+import fr.uga.miage.m1.my_project.core.exception.rest.ClientIdUsedRestException;
 import fr.uga.miage.m1.my_project.restapi.exception.ClientIdUsedResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ClientIdUsedRestExceptionHandler {
-
     @ExceptionHandler(ClientIdUsedRestException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     ClientIdUsedResponse handle(HttpServletRequest httpServletRequest, ClientIdUsedRestException e) {
@@ -20,5 +19,4 @@ public class ClientIdUsedRestExceptionHandler {
                 .uri(httpServletRequest.getRequestURI())
                 .build();
     }
-
 }

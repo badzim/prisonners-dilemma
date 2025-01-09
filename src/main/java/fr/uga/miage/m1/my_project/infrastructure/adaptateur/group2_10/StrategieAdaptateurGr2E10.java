@@ -1,8 +1,8 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10;
 
 import fr.uga.m1miage.pc.strategy.Strategy;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.strategie.Strategie;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.strategie.Strategie;
 import java.util.ArrayList;
 import java.util.List;
 

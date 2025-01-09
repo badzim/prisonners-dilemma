@@ -1,13 +1,12 @@
 package fr.uga.miage.m1.my_project.service;
 
 
-import fr.uga.miage.m1.my_project.exception.rest.InvalidActionRestException;
-import fr.uga.miage.m1.my_project.model.Rencontre;
-import fr.uga.miage.m1.my_project.model.Tour;
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.model.joueur.Humain;
-import fr.uga.miage.m1.my_project.model.joueur.Joueur;
-import fr.uga.miage.m1.my_project.model.joueur.Robot;
+import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
+import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
+import fr.uga.miage.m1.my_project.core.domain.model.Tour;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
+import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
 import org.springframework.stereotype.Service;
 
 @Service

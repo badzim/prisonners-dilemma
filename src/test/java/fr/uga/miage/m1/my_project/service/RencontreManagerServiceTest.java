@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.exception.rest.RencontreNotFoundRestException;
-import fr.uga.miage.m1.my_project.model.Rencontre;
+import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
+import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
-import fr.uga.miage.m1.my_project.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
 import fr.uga.strats.g5_2.enums.Decision;
 import fr.uga.strats.g5_2.models.Tour;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ class StrategieTourAdapterGr2E5Test {
     @Test
     void testAdapter_ValidTour() {
         // Crée un tour interne pour tester l'adaptation
-        fr.uga.miage.m1.my_project.model.Tour tourIntern = new fr.uga.miage.m1.my_project.model.Tour(
+        fr.uga.miage.m1.my_project.core.domain.model.Tour tourIntern = new fr.uga.miage.m1.my_project.core.domain.model.Tour(
 
         );
         tourIntern.setActionInitiateur(TypeAction.COOPERER);
@@ -29,7 +29,7 @@ class StrategieTourAdapterGr2E5Test {
     @Test
     void testAdapter_InvalidTour() {
         // Test avec un tour invalide (s'il y avait un cas de tour avec des actions invalides)
-        fr.uga.miage.m1.my_project.model.Tour tourIntern = new fr.uga.miage.m1.my_project.model.Tour(
+        fr.uga.miage.m1.my_project.core.domain.model.Tour tourIntern = new fr.uga.miage.m1.my_project.core.domain.model.Tour(
 
         );
 
