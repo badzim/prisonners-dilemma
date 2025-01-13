@@ -3,7 +3,7 @@ package fr.uga.miage.m1.my_project.web.controller;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_STRATEGIE;
 import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
-import fr.uga.miage.m1.my_project.service.RencontreService;
+import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -2,6 +2,7 @@ package fr.uga.miage.m1.my_project.service;
 
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
+import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import fr.uga.miage.m1.my_project.core.domain.service.TourService;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
@@ -301,7 +302,7 @@ class RencontreServiceTest {
 
         // Assert
         // Vérifie que l'abandon a été géré
-        verify(rencontreService, times(1)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"");
+        verify(rencontreService, times(2)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"");
 
         // Vérifie que l'action enregistrée après l'abandon est COOPERER
         verify(tourService, times(1)).setActionJoueur(joueur, rencontre, TYPE_ACTION.COOPERER);

@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.core.domain.service;
 
 import fr.uga.m1miage.pc.strategy.Strategy;
 import fr.uga.m1miage.pc.strategy.StrategyFactory;
@@ -14,6 +14,7 @@ import fr.uga.miage.m1.my_project.core.domain.model.enums.*;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.*;
 import fr.uga.miage.m1.my_project.core.domain.model.strategie.*;
 import fr.uga.miage.m1.my_project.core.port.input.JoueurServicePort;
+import fr.uga.miage.m1.my_project.core.port.input.RencontreServicePort;
 import fr.uga.miage.m1.my_project.core.port.input.TourServicePort;
 import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RencontreService {
+public class RencontreService implements RencontreServicePort {
 
     @Qualifier("inMemoryRencontreRepository")
     private final RencontreRepository rencontreRepository;
@@ -480,7 +481,7 @@ public class RencontreService {
         }
     }
 
-    private Rencontre getRencontreEnCoursByClientId(String clientId) {
+    public Rencontre getRencontreEnCoursByClientId(String clientId) {
         Rencontre rencontre = rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS);
         if (rencontre == null) {
             throw new RencontreNotFoundRestException("Rencontre non trouvée pour le client.", clientId);
@@ -488,7 +489,7 @@ public class RencontreService {
         return rencontre;
     }
 
-    private Joueur getJoueurFromRencontre(Rencontre rencontre, String clientId) {
+    public Joueur getJoueurFromRencontre(Rencontre rencontre, String clientId) {
         if (clientId.equals(rencontre.getInitiateur().getId())) {
             return rencontre.getInitiateur();
         } else if (clientId.equals(rencontre.getAdversaire().getId())) {
@@ -498,17 +499,17 @@ public class RencontreService {
         }
     }
 
-    private Joueur getJoueurOppose(Rencontre rencontre, Joueur joueur) {
+    public Joueur getJoueurOppose(Rencontre rencontre, Joueur joueur) {
         return (joueur == rencontre.getAdversaire()) ? rencontre.getInitiateur() : rencontre.getAdversaire();
     }
 
-    private List<TYPE_ACTION> getHistoriqueJoueur(Rencontre rencontre, Joueur joueur) {
+    public List<TYPE_ACTION> getHistoriqueJoueur(Rencontre rencontre, Joueur joueur) {
         return (joueur.getEtat() == ETAT_JOUEUR.EN_PARTIE_INITIATEUR)
                 ? rencontre.getHistoriqueInitiateur()
                 : rencontre.getHistoriqueAdversaire();
     }
 
-    private int getDernierResultatJoueur(Rencontre rencontre, Joueur joueur) {
+    public int getDernierResultatJoueur(Rencontre rencontre, Joueur joueur) {
         List<Tour> tours = rencontre.getTours();
         if (tours.isEmpty()) return 0;
         Tour dernierTour = tours.get(tours.size() - 1);

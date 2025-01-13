@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.controller;
 
-import fr.uga.miage.m1.my_project.service.RencontreService;
+import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

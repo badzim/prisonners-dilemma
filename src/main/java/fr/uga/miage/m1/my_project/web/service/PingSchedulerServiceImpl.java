@@ -2,7 +2,7 @@ package fr.uga.miage.m1.my_project.web.service;
 
 import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import fr.uga.miage.m1.my_project.core.port.output.TaskScheduler;
-import fr.uga.miage.m1.my_project.service.RencontreService;
+import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
