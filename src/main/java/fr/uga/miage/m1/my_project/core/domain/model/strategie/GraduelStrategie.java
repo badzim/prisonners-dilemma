@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 
 import java.util.List;
 
@@ -11,14 +11,14 @@ public class GraduelStrategie extends Strategie {
     private boolean enVengeance = false;
 
     @Override
-    public TypeAction getAction(List<TypeAction> actionsAdversaire, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actionsAdversaire, int dernierResultat) {
         // Si c'est le premier tour, coopérer
         if (actionsAdversaire.isEmpty()) {
-            return TypeAction.COOPERER;
+            return TYPE_ACTION.COOPERER;
         }
 
         // Vérifier si l'adversaire a trahi au dernier tour et que nous ne sommes pas déjà en vengeance
-        if (!enVengeance && actionsAdversaire.get(actionsAdversaire.size() - 1) == TypeAction.TRAHIR) {
+        if (!enVengeance && actionsAdversaire.get(actionsAdversaire.size() - 1) == TYPE_ACTION.TRAHIR) {
             trahisonsARendre = calculerNombreDeTrahisons(actionsAdversaire);
             cooperationsARendre = 2; // Après la vengeance, coopérer deux fois
             enVengeance = true;
@@ -27,22 +27,22 @@ public class GraduelStrategie extends Strategie {
         if (enVengeance) {
             if (trahisonsARendre > 0) {
                 trahisonsARendre--;
-                return TypeAction.TRAHIR;
+                return TYPE_ACTION.TRAHIR;
             } else if (cooperationsARendre > 0) {
                 cooperationsARendre--;
-                return TypeAction.COOPERER;
+                return TYPE_ACTION.COOPERER;
             } else {
                 enVengeance = false; // Fin de la vengeance
             }
         }
 
-        return TypeAction.COOPERER;
+        return TYPE_ACTION.COOPERER;
     }
 
-    private int calculerNombreDeTrahisons(List<TypeAction> actionsAdversaire) {
+    private int calculerNombreDeTrahisons(List<TYPE_ACTION> actionsAdversaire) {
         int nombreDeTrahisons = 0;
-        for (TypeAction action : actionsAdversaire) {
-            if (action == TypeAction.TRAHIR) {
+        for (TYPE_ACTION action : actionsAdversaire) {
+            if (action == TYPE_ACTION.TRAHIR) {
                 nombreDeTrahisons++;
             }
         }

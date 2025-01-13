@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -18,30 +18,30 @@ class RancunierDouxStrategieTest {
 
     @Test
     void testCooperateInitially() {
-        List<TypeAction> actions = new ArrayList<>();
-        assertEquals(TypeAction.COOPERER, strategie.getAction(actions, 0), "La stratégie doit commencer en coopérant.");
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        assertEquals(TYPE_ACTION.COOPERER, strategie.getAction(actions, 0), "La stratégie doit commencer en coopérant.");
     }
 
     @Test
     void testPunishmentSequenceAfterBetrayal() {
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
 
         // Initial cooperation
-        assertEquals(TypeAction.COOPERER, strategie.getAction(actions, 0));
+        assertEquals(TYPE_ACTION.COOPERER, strategie.getAction(actions, 0));
 
         // L'adversaire trahit au tour suivant
-        actions.add(TypeAction.TRAHIR);
+        actions.add(TYPE_ACTION.TRAHIR);
 
         // Début de la séquence punitive : 5x TRAHIR
         for (int i = 0; i < 5; i++) {
-            assertEquals(TypeAction.TRAHIR, strategie.getAction(actions, 0), "La stratégie doit trahir pour la punition.");
+            assertEquals(TYPE_ACTION.TRAHIR, strategie.getAction(actions, 0), "La stratégie doit trahir pour la punition.");
         }
 
         // Les 2 coups de coopération après les trahisons
         for (int i = 0; i < 2; i++) {
-            assertEquals(TypeAction.COOPERER, strategie.getAction(actions, 0), "La stratégie doit coopérer après la punition.");
+            assertEquals(TYPE_ACTION.COOPERER, strategie.getAction(actions, 0), "La stratégie doit coopérer après la punition.");
         }
 
-        assertEquals(TypeAction.TRAHIR, strategie.getAction(actions, 0), "La stratégie doit revenir à la coopération.");
+        assertEquals(TYPE_ACTION.TRAHIR, strategie.getAction(actions, 0), "La stratégie doit revenir à la coopération.");
     }
 }

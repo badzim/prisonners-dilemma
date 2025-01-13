@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class GraduelStrategieTest {
 
     private GraduelStrategie strategie;
-    private List<TypeAction> actionsAdversaire;
+    private List<TYPE_ACTION> actionsAdversaire;
 
     @BeforeEach
     void setUp() {
@@ -22,22 +22,22 @@ class GraduelStrategieTest {
 
     @Test
     void testCooperateInitially() {
-        TypeAction action = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action, "La stratégie doit coopérer au premier tour.");
+        TYPE_ACTION action = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action, "La stratégie doit coopérer au premier tour.");
     }
 
     @Test
     void testCooperateIfOpponentCooperates() {
-        actionsAdversaire.add(TypeAction.COOPERER);
-        TypeAction action = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action, "La stratégie doit coopérer si l'adversaire a coopéré.");
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
+        TYPE_ACTION action = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action, "La stratégie doit coopérer si l'adversaire a coopéré.");
     }
 
     @Test
     void testStartVengeanceAfterBetrayal() {
-        actionsAdversaire.add(TypeAction.TRAHIR);
-        TypeAction action = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, action, "La stratégie doit commencer la vengeance en trahissant.");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
+        TYPE_ACTION action = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, action, "La stratégie doit commencer la vengeance en trahissant.");
     }
 
     @Test
@@ -45,41 +45,41 @@ class GraduelStrategieTest {
         // L'adversaire coopère deux fois puis trahit trois fois
 
 
-        TypeAction action1 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action1, "La stratégie doit cooperer au début.");
-        actionsAdversaire.add(TypeAction.COOPERER);
+        TYPE_ACTION action1 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action1, "La stratégie doit cooperer au début.");
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
 
-        TypeAction action2 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action2, "La stratégie doit continuer à cooperer.");
-        actionsAdversaire.add(TypeAction.COOPERER);
+        TYPE_ACTION action2 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action2, "La stratégie doit continuer à cooperer.");
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
-        TypeAction action3 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action3, "La stratégie doit continuer à cooperer.");
-        actionsAdversaire.add(TypeAction.TRAHIR);
+        TYPE_ACTION action3 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action3, "La stratégie doit continuer à cooperer.");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction action4 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, action4, "La stratégie doit activer la vengeance.");
-        actionsAdversaire.add(TypeAction.TRAHIR);
-
-        // Deux coopérations après la vengeance
-        TypeAction action5 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action5, "La stratégie doit coopérer après la vengeance.");
-        actionsAdversaire.add(TypeAction.TRAHIR);
-
+        TYPE_ACTION action4 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, action4, "La stratégie doit activer la vengeance.");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
         // Deux coopérations après la vengeance
-        TypeAction action6 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action6, "La stratégie doit coopérer après la vengeance.");
-        actionsAdversaire.add(TypeAction.COOPERER);
+        TYPE_ACTION action5 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action5, "La stratégie doit coopérer après la vengeance.");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction action7 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, action7, "La stratégie doit coopérer après la vengeance.");
-        actionsAdversaire.add(TypeAction.TRAHIR);
 
-        TypeAction action8 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, action8, "La stratégie doit trahir après trahision");
-        actionsAdversaire.add(TypeAction.TRAHIR);
+        // Deux coopérations après la vengeance
+        TYPE_ACTION action6 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action6, "La stratégie doit coopérer après la vengeance.");
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
+
+        TYPE_ACTION action7 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, action7, "La stratégie doit coopérer après la vengeance.");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
+
+        TYPE_ACTION action8 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, action8, "La stratégie doit trahir après trahision");
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
     }
 
 }

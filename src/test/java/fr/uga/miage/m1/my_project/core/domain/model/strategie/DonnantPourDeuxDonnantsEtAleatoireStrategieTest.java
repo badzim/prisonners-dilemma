@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,10 +31,10 @@ class DonnantPourDeuxDonnantsEtAleatoireStrategieTest {
         // Simuler que le coup aléatoire ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
 
-        List<TypeAction> actions = new ArrayList<>();
-        TypeAction result = strategie.getAction(actions, 0);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
     }
 
     @Test
@@ -43,11 +43,11 @@ class DonnantPourDeuxDonnantsEtAleatoireStrategieTest {
         when(mockRandom.nextInt(10)).thenReturn(0);
         when(mockSecondRandom.nextBoolean()).thenReturn(true); // Simule COOPERER
 
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer lors du coup aléatoire.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer lors du coup aléatoire.");
     }
 
     @Test
@@ -56,11 +56,11 @@ class DonnantPourDeuxDonnantsEtAleatoireStrategieTest {
         when(mockRandom.nextInt(10)).thenReturn(0);
         when(mockRandom.nextBoolean()).thenReturn(false); // Simule TRAHIR
 
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
-        assertEquals(TypeAction.TRAHIR, result, "La stratégie doit trahir lors du coup aléatoire.");
+        assertEquals(TYPE_ACTION.TRAHIR, result, "La stratégie doit trahir lors du coup aléatoire.");
     }
 
     @Test
@@ -68,13 +68,13 @@ class DonnantPourDeuxDonnantsEtAleatoireStrategieTest {
         // Simuler que le coup aléatoire ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
 
-        List<TypeAction> actions = new ArrayList<>();
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.COOPERER);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer si l'adversaire a coopéré deux fois de suite.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer si l'adversaire a coopéré deux fois de suite.");
     }
 
     @Test
@@ -82,12 +82,12 @@ class DonnantPourDeuxDonnantsEtAleatoireStrategieTest {
         // Simuler que le coup aléatoire ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
 
-        List<TypeAction> actions = new ArrayList<>();
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.TRAHIR);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
-        assertEquals(TypeAction.TRAHIR, result, "La stratégie doit trahir si l'adversaire n'a pas fait la même action deux fois de suite.");
+        assertEquals(TYPE_ACTION.TRAHIR, result, "La stratégie doit trahir si l'adversaire n'a pas fait la même action deux fois de suite.");
     }
 }

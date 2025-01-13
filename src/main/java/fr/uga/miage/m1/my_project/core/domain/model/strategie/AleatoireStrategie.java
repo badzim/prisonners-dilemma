@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import java.util.List;
 import java.security.SecureRandom;
 
@@ -10,12 +10,12 @@ public class AleatoireStrategie extends Strategie {
         super(random);
     }
 
-    private TypeAction getRandomAction() {
-        return this.getRandom().nextBoolean() ? TypeAction.COOPERER : TypeAction.TRAHIR;
+    private TYPE_ACTION getRandomAction() {
+        return this.getRandom().nextBoolean() ? TYPE_ACTION.COOPERER : TYPE_ACTION.TRAHIR;
     }
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         // Choisir aléatoirement entre traîr ou coopérer
         return getRandomAction();
     }

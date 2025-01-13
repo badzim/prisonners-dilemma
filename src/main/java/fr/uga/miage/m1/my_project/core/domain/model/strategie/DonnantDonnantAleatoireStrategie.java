@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 
 import java.util.List;
 // import java.util.Random; // attacker can guess random from this bib
@@ -14,19 +14,19 @@ public class DonnantDonnantAleatoireStrategie extends Strategie{
         super(random);
     }
 
-    private TypeAction getRandomAction() {
-        return this.getRandom().nextBoolean() ? TypeAction.COOPERER : TypeAction.TRAHIR;
+    private TYPE_ACTION getRandomAction() {
+        return this.getRandom().nextBoolean() ? TYPE_ACTION.COOPERER : TYPE_ACTION.TRAHIR;
     }
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         //décider de la stratégie à utiliser
         boolean useRandomAction = this.getRandom().nextBoolean(); // Renvoie true ou false de façon aléatoire
 
         if (useRandomAction) {
             return getRandomAction();
         } else {
-            if (actions.isEmpty()) return TypeAction.COOPERER;
+            if (actions.isEmpty()) return TYPE_ACTION.COOPERER;
             return getLastAction(actions); // Dernier élément de la liste
         }
     }

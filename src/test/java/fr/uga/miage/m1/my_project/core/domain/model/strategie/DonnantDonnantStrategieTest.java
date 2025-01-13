@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -19,36 +19,36 @@ class DonnantDonnantStrategieTest {
     @Test
     void testCooperateWhenNoPreviousActions() {
         // Liste vide
-        List<TypeAction> actions = new ArrayList<>();
-        TypeAction result = strategie.getAction(actions, 0);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifie que la stratégie coopère par défaut
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
     }
 
     @Test
     void testFollowLastAction() {
-        List<TypeAction> actions = new ArrayList<>();
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.TRAHIR);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifie que la stratégie imite la dernière action (trahir ici)
-        assertEquals(TypeAction.TRAHIR, result, "La stratégie doit suivre la dernière action de l'adversaire.");
+        assertEquals(TYPE_ACTION.TRAHIR, result, "La stratégie doit suivre la dernière action de l'adversaire.");
     }
 
     @Test
     void testFollowLastActionAfterMultipleRounds() {
-        List<TypeAction> actions = new ArrayList<>();
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.TRAHIR);
-        actions.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.TRAHIR);
+        actions.add(TYPE_ACTION.COOPERER);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifie que la stratégie imite la dernière action (coopérer ici)
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit suivre la dernière action de l'adversaire.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit suivre la dernière action de l'adversaire.");
     }
 }

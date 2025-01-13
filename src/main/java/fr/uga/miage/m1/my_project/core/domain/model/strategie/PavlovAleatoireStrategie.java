@@ -1,28 +1,28 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import java.util.List;
 import java.security.SecureRandom;
 
 public class PavlovAleatoireStrategie extends Strategie {
     private static final double RANDOM_PROBABILITY = 0.2;
-    private TypeAction lastAction = TypeAction.COOPERER;
+    private TYPE_ACTION lastAction = TYPE_ACTION.COOPERER;
 
     public PavlovAleatoireStrategie(SecureRandom random) {
         super(random);
     }
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         if (getRandom().nextDouble() < RANDOM_PROBABILITY) {
             // Choisir aléatoirement une action
-            lastAction = getRandom().nextBoolean() ? TypeAction.COOPERER : TypeAction.TRAHIR;
+            lastAction = getRandom().nextBoolean() ? TYPE_ACTION.COOPERER : TYPE_ACTION.TRAHIR;
         } else if (dernierResultat == 5 || dernierResultat == 3) {
             // Répéter le dernier choix si 5 ou 3 points ont été obtenus
             // lastAction reste inchangé
         } else {
             // Inverser l'action si autre résultat
-            lastAction = (lastAction == TypeAction.COOPERER) ? TypeAction.TRAHIR : TypeAction.COOPERER;
+            lastAction = (lastAction == TYPE_ACTION.COOPERER) ? TYPE_ACTION.TRAHIR : TYPE_ACTION.COOPERER;
         }
         return lastAction;
     }

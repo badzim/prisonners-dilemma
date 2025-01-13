@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import java.util.List;
 
 public class DonnantDonnantSoupconneuxStrategie extends Strategie {
@@ -8,11 +8,11 @@ public class DonnantDonnantSoupconneuxStrategie extends Strategie {
     private boolean isFirstMove = true; // Variable pour vérifier si c'est le premier coup
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         // Si c'est le premier coup, trahir
         if (isFirstMove) {
             isFirstMove = false;
-            return TypeAction.TRAHIR;
+            return TYPE_ACTION.TRAHIR;
         }
 
         // Après le premier coup, imiter le dernier coup de l'adversaire
@@ -21,6 +21,6 @@ public class DonnantDonnantSoupconneuxStrategie extends Strategie {
         }
 
         // Par défaut, si aucune action passée n'est disponible, coopérer
-        return TypeAction.COOPERER;
+        return TYPE_ACTION.COOPERER;
     }
 }

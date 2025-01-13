@@ -1,16 +1,22 @@
 package fr.uga.miage.m1.my_project.service;
 
+import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
+import fr.uga.miage.m1.my_project.core.domain.service.TourService;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.EtatJoueur;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeStrategie;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_JOUEUR;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_STRATEGIE;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Robot;
-import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
+import fr.uga.miage.m1.my_project.core.port.output.StrategieRepository;
+import fr.uga.miage.m1.my_project.persistence.memory.InMemoryRencontreRepository;
+import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
+import fr.uga.miage.m1.my_project.web.service.PingSchedulerService;
+import fr.uga.miage.m1.my_project.web.service.SseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -39,7 +45,7 @@ class RencontreServiceTest {
     private SseService sseService;
 
     @MockBean
-    private RencontreManagerService rencontreManagerService;
+    private InMemoryRencontreRepository inMemoryRencontreRepository;
 
     @MockBean
     private JoueurService joueurService;
@@ -47,7 +53,7 @@ class RencontreServiceTest {
     @MockBean
     private TourService tourService;
     @Autowired
-    private StrategieFactoryService strategieFactoryService;
+    private StrategieRepository strategieFactoryService;
 
     @BeforeEach
     public void setUp() {
@@ -65,10 +71,10 @@ class RencontreServiceTest {
         Rencontre rencontre2 = new Rencontre();
         rencontre2.setInitiateur(new Humain("id_test_02", "nom_test_02"));
 
-        when(rencontreManagerService.getRencontresEnAttente()).thenReturn(List.of(rencontre1, rencontre2));
+        when(inMemoryRencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre1, rencontre2));
 
         // Act
-        List<RencontreDto> result = rencontreService.getRencontresDisponibles();
+        List<RencontreResponse> result = rencontreService.getRencontresEnAttente();
 
         // Assert
         assertNotNull(result);
@@ -77,7 +83,7 @@ class RencontreServiceTest {
         // Le mappeur est statique, donc on se contente d'assurer la taille et la non-nullité.
 
         // Vérifie que les méthodes internes sont appelées
-        verify(rencontreManagerService, times(2)).getRencontresEnAttente();
+        verify(inMemoryRencontreRepository, times(2)).getRencontresEnAttente();
         // On ne peut pas vérifier directement removeDisconnectedRencontres() car elle est privée,
         // mais on voit qu'au moins on appelle getRencontresEnAttente() deux fois (une dans remove et une après).
         // On peut également vérifier qu'on a appelé handleDisconnectedPlayers sur sseService.
@@ -106,12 +112,9 @@ class RencontreServiceTest {
         // Vérifications des appels
         verify(sseService, times(1)).getSseEmitters(); // Vérifie que le client est connecté
         verify(joueurService, times(1)).getJoueurById(clientId); // Vérifie que le joueur est récupéré
-        assertSame(EtatJoueur.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
-
-
+        assertSame(ETAT_JOUEUR.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
         // Vérifie que la rencontre a été ajoutée et que le compteur d'attente a été incrémenté
-        verify(rencontreManagerService, times(1)).incrementNombreRencontreEnAttente();
-        verify(rencontreManagerService, times(1)).addToRencontreEnAttente(any(Rencontre.class));
+        verify(inMemoryRencontreRepository, times(1)).addRencontre(any(), any(Rencontre.class));
 
         // Vérifie les appels SSE
         verify(sseService, times(1)).sendEvent(anyString(), anyString(), anyString());
@@ -137,7 +140,7 @@ class RencontreServiceTest {
         Rencontre rencontre = new Rencontre();
         rencontre.setInitiateur(initiateur);
         rencontre.setIdRencontre(idRencontre);
-        initiateur.setEtat(EtatJoueur.EN_MENU);
+        initiateur.setEtat(ETAT_JOUEUR.EN_MENU);
 
         // Simuler les comportements
         // Mock des comportements
@@ -147,7 +150,7 @@ class RencontreServiceTest {
 
         when(sseService.getSseEmitters()).thenReturn(emitters);
         when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
-        when(rencontreManagerService.findRencontreEnAttenteById(idRencontre)).thenReturn(rencontre);
+        when(inMemoryRencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
 
         // Act
         rencontreService.rejoindreRencontre(adversaireId, idRencontre);
@@ -155,19 +158,18 @@ class RencontreServiceTest {
         // Assert
         // Vérifie que l'adversaire est ajouté à la rencontre
         assertEquals(adversaire, rencontre.getAdversaire());
-        assertEquals(EtatJoueur.EN_PARTIE_ADVERSAIRE, adversaire.getEtat());
-        assertEquals(EtatJoueur.EN_PARTIE_INITIATEUR, initiateur.getEtat());
+        assertEquals(ETAT_JOUEUR.EN_PARTIE_ADVERSAIRE, adversaire.getEtat());
+        assertEquals(ETAT_JOUEUR.EN_PARTIE_INITIATEUR, initiateur.getEtat());
 
 
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseService, times(3)).getSseEmitters(); // Vérifie la connexion du client
         verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
-        verify(rencontreManagerService, times(1)).findRencontreEnAttenteById(idRencontre); // Vérifie que la rencontre est récupérée
+        verify(inMemoryRencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
 
         // Vérifie que les états des joueurs sont correctement mis à jour
-        verify(rencontreManagerService, times(1)).decrementNombreRencontreEnAttente(rencontre);
-        verify(rencontreManagerService, times(1)).addToRencontreMap(adversaireId, rencontre);
-        verify(rencontreManagerService, times(1)).addToRencontreMap(initiateur.getId(), rencontre);
+        verify(inMemoryRencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
+        verify(inMemoryRencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
 
         // Vérifie les notifications SSE
         verify(sseService, times(2)).sendEvent(anyString(), anyString(), anyString());
@@ -191,7 +193,7 @@ class RencontreServiceTest {
         Rencontre rencontre = new Rencontre();
         rencontre.setInitiateur(initiateur);
         rencontre.setIdRencontre(idRencontre);
-        initiateur.setEtat(EtatJoueur.EN_MENU);
+        initiateur.setEtat(ETAT_JOUEUR.EN_MENU);
 
         // Simuler les comportements
         // Mock des comportements
@@ -200,7 +202,7 @@ class RencontreServiceTest {
 
         when(sseService.getSseEmitters()).thenReturn(emitters);
         when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
-        when(rencontreManagerService.findRencontreEnAttenteById(idRencontre)).thenReturn(rencontre);
+        when(inMemoryRencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
 
         // Act
         rencontreService.rejoindreRencontre(adversaireId, idRencontre);
@@ -208,19 +210,18 @@ class RencontreServiceTest {
         // Assert
         // Vérifie que l'adversaire est ajouté à la rencontre
         assertEquals(adversaire, rencontre.getAdversaire());
-        assertEquals(EtatJoueur.EN_PARTIE_ADVERSAIRE, adversaire.getEtat());
-        assertEquals(EtatJoueur.EN_MENU, initiateur.getEtat());
+        assertEquals(ETAT_JOUEUR.EN_PARTIE_ADVERSAIRE, adversaire.getEtat());
+        assertEquals(ETAT_JOUEUR.EN_MENU, initiateur.getEtat());
 
 
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseService, times(3)).getSseEmitters(); // Vérifie la connexion du client
         verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
-        verify(rencontreManagerService, times(1)).findRencontreEnAttenteById(idRencontre); // Vérifie que la rencontre est récupérée
+        verify(inMemoryRencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
 
-        // Vérifie que les états des joueurs sont correctement mis à jour
-        verify(rencontreManagerService, times(1)).decrementNombreRencontreEnAttente(rencontre);
-        verify(rencontreManagerService, times(1)).addToRencontreMap(adversaireId, rencontre);
-        verify(rencontreManagerService, times(1)).addToRencontreMap(initiateur.getId(), rencontre);
+        // Vérifie que les états des joueurs sont correctement mis à
+        verify(inMemoryRencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
+        verify(inMemoryRencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
 
         // Vérifie les notifications SSE
         verify(sseService, times(2)).sendEvent(anyString(), anyString(), anyString());
@@ -232,8 +233,8 @@ class RencontreServiceTest {
     void testEnregistrerChoix_NormalFlow() {
         // Arrange
         String clientId = "client123";
-        TypeAction action = TypeAction.COOPERER;
-        TypeStrategie strategie = TypeStrategie.DONNANTDONNANT;
+        TYPE_ACTION action = TYPE_ACTION.COOPERER;
+        TYPE_STRATEGIE strategie = TYPE_STRATEGIE.DONNANTDONNANT;
 
         Humain joueur = new Humain(clientId, "Joueur Test");
         Humain adversaire = new Humain("opponent456", "Adversaire Test");
@@ -247,7 +248,7 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseService.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(rencontreManagerService.getRencontreMap()).thenReturn(java.util.Collections.singletonMap(clientId, rencontre));
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Mock pour vérifier si le tour est prêt
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
@@ -270,8 +271,8 @@ class RencontreServiceTest {
     void testEnregistrerChoix_PlayerAbandons() {
         // Arrange
         String clientId = "client123";
-        TypeAction action = TypeAction.ABONDONNER;
-        TypeStrategie strategie = TypeStrategie.DONNANTDONNANT;
+        TYPE_ACTION action = TYPE_ACTION.ABONDONNER;
+        TYPE_STRATEGIE strategie = TYPE_STRATEGIE.DONNANTDONNANT;
 
         Humain joueur = new Humain(clientId, "Joueur Test");
         Humain adversaire = new Humain("opponent456", "Adversaire Test");
@@ -285,12 +286,12 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseService.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(rencontreManagerService.getRencontreMap()).thenReturn(java.util.Collections.singletonMap(clientId, rencontre));
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Mock handlePlayerAbandon pour retourner une action par défaut
         when(rencontreService.handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"" ))
-                .thenReturn(TypeAction.COOPERER);
+                .thenReturn(TYPE_ACTION.COOPERER);
 
         // Mock pour sendEvent
         doNothing().when(sseService).sendEvent(anyString(), anyString(), anyString());
@@ -303,7 +304,7 @@ class RencontreServiceTest {
         verify(rencontreService, times(1)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"");
 
         // Vérifie que l'action enregistrée après l'abandon est COOPERER
-        verify(tourService, times(1)).setActionJoueur(joueur, rencontre, TypeAction.COOPERER);
+        verify(tourService, times(1)).setActionJoueur(joueur, rencontre, TYPE_ACTION.COOPERER);
 
         // Vérifie l'envoi de l'événement d'abandon
         verify(sseService, times(2)).sendEvent(anyString(), anyString(), anyString());
@@ -314,8 +315,8 @@ class RencontreServiceTest {
     void testEnregistrerChoix_TourIsReady() {
         // Arrange
         String clientId = "client123";
-        TypeAction action = TypeAction.COOPERER;
-        TypeStrategie strategie = null; // Pas nécessaire pour un tour normal
+        TYPE_ACTION action = TYPE_ACTION.COOPERER;
+        TYPE_STRATEGIE strategie = null; // Pas nécessaire pour un tour normal
 
         Humain joueur = new Humain(clientId, "Joueur Test");
         Humain adversaire = new Humain("opponent456", "Adversaire Test");
@@ -330,7 +331,7 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseService.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(rencontreManagerService.getRencontreMap()).thenReturn(java.util.Collections.singletonMap(clientId, rencontre));
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Mock pour vérifier si le tour est prêt
         when(rencontreService.estTourPret(rencontre)).thenReturn(true);
@@ -353,10 +354,10 @@ class RencontreServiceTest {
         String adversaireId = "humanAdversary";
 
         Humain initiateur = new Humain(initiateurId, "Initiateur Humain");
-        initiateur.setEtat(EtatJoueur.EN_PARTIE_INITIATEUR);
+        initiateur.setEtat(ETAT_JOUEUR.EN_PARTIE_INITIATEUR);
 
         Humain adversaire = new Humain(adversaireId, "Adversaire Humain");
-        adversaire.setEtat(EtatJoueur.EN_PARTIE_ADVERSAIRE);
+        adversaire.setEtat(ETAT_JOUEUR.EN_PARTIE_ADVERSAIRE);
 
         Rencontre rencontre = new Rencontre();
         rencontre.setNombreTours(3);
@@ -373,20 +374,18 @@ class RencontreServiceTest {
         when(sseService.getSseEmitters()).thenReturn(sseEmitters);
 
         // Mock des rencontres dans RencontreManagerService
-        when(rencontreManagerService.getRencontreMap()).thenReturn(Map.of(
-                initiateurId, rencontre,
-                adversaireId, rencontre
-        ));
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(adversaireId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Act - Le premier joueur abandonne
-        rencontreService.enregistrerChoix(initiateurId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT, "");
+        rencontreService.enregistrerChoix(initiateurId, TYPE_ACTION.ABONDONNER, TYPE_STRATEGIE.DONNANTDONNANT, "");
 
         // Vérifie que l'initiateur est remplacé par un robot
         assertInstanceOf(Robot.class, rencontre.getInitiateur(), "L'initiateur doit être remplacé par un robot.");
         Robot initiateurRobot = (Robot) rencontre.getInitiateur();
 
         // Act - Le deuxième joueur abandonne
-        rencontreService.enregistrerChoix(adversaireId, TypeAction.ABONDONNER, TypeStrategie.DONNANTDONNANT, "");
+        rencontreService.enregistrerChoix(adversaireId, TYPE_ACTION.ABONDONNER, TYPE_STRATEGIE.DONNANTDONNANT, "");
 
         // Vérifie que l'adversaire est remplacé par un robot
         assertTrue(rencontre.getAdversaire() instanceof Robot, "L'adversaire doit être remplacé par un robot.");
@@ -421,7 +420,7 @@ class RencontreServiceTest {
         // Vérifications des appels
         verify(sseService, times(1)).getSseEmitters(); // Vérifie que le client est connecté
         verify(joueurService, times(1)).getJoueurById(clientId); // Vérifie que le joueur est récupéré
-        assertSame(EtatJoueur.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
+        assertSame(ETAT_JOUEUR.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
     }
 
     @Test
@@ -448,8 +447,8 @@ class RencontreServiceTest {
     void testEnregistrerChoix_PlayerAbandons_WithG2_5() {
         // Arrange
         String clientId = "client123";
-        TypeAction action = TypeAction.ABONDONNER;
-        TypeStrategie strategie = TypeStrategie.TOUJOURSTRAHIR;
+        TYPE_ACTION action = TYPE_ACTION.ABONDONNER;
+        TYPE_STRATEGIE strategie = TYPE_STRATEGIE.TOUJOURSTRAHIR;
 
         Humain joueur = new Humain(clientId, "Joueur Test");
         Humain adversaire = new Humain("opponent456", "Adversaire Test");
@@ -463,7 +462,7 @@ class RencontreServiceTest {
 
         // Mock des services
         when(sseService.getSseEmitters()).thenReturn(Collections.singletonMap(clientId, new SseEmitter()));
-        when(rencontreManagerService.getRencontreMap()).thenReturn(Collections.singletonMap(clientId, rencontre));
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Configuration pour le groupe G2_5

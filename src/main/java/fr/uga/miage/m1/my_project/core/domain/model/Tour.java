@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +9,8 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class Tour {
-    private TypeAction actionInitiateur;
-    private TypeAction actionAdversaire;
+    private TYPE_ACTION actionInitiateur;
+    private TYPE_ACTION actionAdversaire;
     private int scoreInitiateur;
     private int scoreAdversaire;
     private int numeroTour;

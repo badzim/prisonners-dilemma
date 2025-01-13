@@ -4,25 +4,31 @@ import fr.uga.m1miage.pc.strategy.Strategy;
 import fr.uga.m1miage.pc.strategy.StrategyFactory;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
-import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
 import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
-import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieAdaptateurGr2E10;
-import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10.StrategieEnumAdaptateurGr2E10;
-import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieAdaptateurGr2E5;
-import fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5.StrategieEnumAdaptateurGr2E5;
+import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_10.StrategieAdaptateurGr2E10;
+import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_10.StrategieEnumAdaptateurGr2E10;
+import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_5.StrategieAdaptateurGr2E5;
+import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_5.StrategieEnumAdaptateurGr2E5;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.*;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.*;
 import fr.uga.miage.m1.my_project.core.domain.model.strategie.*;
-import fr.uga.miage.m1.my_project.restapi.dto.RencontreDto;
-import fr.uga.miage.m1.my_project.restapi.mapper.RencontreMapper;
+import fr.uga.miage.m1.my_project.core.port.input.JoueurServicePort;
+import fr.uga.miage.m1.my_project.core.port.input.TourServicePort;
+import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
+import fr.uga.miage.m1.my_project.core.port.output.StrategieRepository;
+import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
+import fr.uga.miage.m1.my_project.web.restapi.mapper.RencontreMapper;
+import fr.uga.miage.m1.my_project.web.service.SseService;
 import fr.uga.strats.g5_2.factory.StrategieFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,19 +36,25 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RencontreService {
 
-    private final TourService tourService;
+    @Qualifier("inMemoryRencontreRepository")
+    private final RencontreRepository rencontreRepository;
+    @Qualifier("inMemoryStrategieRepository")
+    private final StrategieRepository strategieRepository;
+    @Qualifier("joueurService")
+    private final JoueurServicePort joueurService;
+    @Qualifier("tourService")
+    private final TourServicePort tourService;
     private final SseService sseService;
-    private final RencontreManagerService rencontreManagerService;
-    private final JoueurService joueurService;
-    private final StrategieFactoryService strategieFactoryService;
+
+
 
     /* =====================================================
        Méthodes Publiques (Interfaces du Service)
        ===================================================== */
 
-    public List<RencontreDto> getRencontresDisponibles() {
+    public List<RencontreResponse> getRencontresEnAttente() {
         updateRencontresDisponibles();
-        return rencontreManagerService.getRencontresEnAttente()
+        return rencontreRepository.getRencontresEnAttente()
                 .stream()
                 .map(RencontreMapper::toDto)
                 .toList();
@@ -51,13 +63,12 @@ public class RencontreService {
     public boolean initierRencontre(String clientId, int nombreTours) {
         verifyClientConnected(clientId);
         Joueur initiateur = joueurService.getJoueurById(clientId);
-        if (initiateur.getEtat() != EtatJoueur.EN_MENU) {
+        if (initiateur.getEtat() != ETAT_JOUEUR.EN_MENU) {
             throw new InvalidActionRestException("Le joueur doit être dans le menu");
         }
-        initiateur.setEtat(EtatJoueur.EN_ATTENTE);
+        initiateur.setEtat(ETAT_JOUEUR.EN_ATTENTE);
         Rencontre rencontre = createNewRencontre(nombreTours, initiateur);
-        rencontreManagerService.incrementNombreRencontreEnAttente();
-        rencontreManagerService.addToRencontreEnAttente(rencontre);
+        rencontreRepository.addRencontre(clientId, rencontre);
         sseService.sendEvent(clientId, "game-initiated", "Rencontre initiée. En attente d'un autre joueur.");
         sseService.broadcast("broadcast-game-initiated-all", "une rencontre à été initié par : " + clientId);
         log.info("Rencontre initiée par le client {} avec {} tours.", clientId, nombreTours);
@@ -68,7 +79,7 @@ public class RencontreService {
     public void rejoindreRencontre(String clientId, String idRencontre) {
         verifyClientConnected(clientId);
         Joueur adversaire = joueurService.getJoueurById(clientId);
-        if (adversaire.getEtat() != EtatJoueur.EN_MENU) {
+        if (adversaire.getEtat() != ETAT_JOUEUR.EN_MENU) {
             throw new InvalidActionRestException("Le joueur doit être dans le menu");
         }
         Rencontre rencontre = validateRejoindreRencontre(clientId, idRencontre);
@@ -76,13 +87,13 @@ public class RencontreService {
         handleInitiateurDeconnecteSiBesoin(rencontre);
     }
 
-    public synchronized void enregistrerChoix(String clientId, TypeAction action, TypeStrategie strategie, String groupId) {
+    public synchronized void enregistrerChoix(String clientId, TYPE_ACTION action, TYPE_STRATEGIE strategie, String groupId) {
         verifyClientConnected(clientId);
-        Rencontre rencontre = getRencontreByClientId(clientId);
+        Rencontre rencontre = getRencontreEnCoursByClientId(clientId);
         Joueur joueur = getJoueurFromRencontre(rencontre, clientId);
         Joueur joueurOppose = getJoueurOppose(rencontre, joueur);
 
-        if (action == TypeAction.ABONDONNER) {
+        if (action == TYPE_ACTION.ABONDONNER) {
             action = handlePlayerAbandon(rencontre, joueur, strategie, joueurOppose, groupId);
             joueur = getJoueurOppose(rencontre, joueurOppose);
         }
@@ -96,7 +107,7 @@ public class RencontreService {
 
     public Rencontre validateRejoindreRencontre(String clientId, String idRencontre) {
         verifyClientConnected(clientId);
-        Rencontre rencontre = rencontreManagerService.findRencontreEnAttenteById(idRencontre);
+        Rencontre rencontre = rencontreRepository.findRencontreById(idRencontre);
 
         if (rencontre.getInitiateur().getId().equals(clientId)) {
             throw new InvalidActionRestException("Vous ne pouvez pas rejoindre votre propre partie.");
@@ -124,22 +135,25 @@ public class RencontreService {
     }
 
     private void removeDisconnectedRencontres() {
-        List<Rencontre> rencontresActives = rencontreManagerService.getRencontresEnAttente()
+        List<Rencontre> rencontresNonActives = rencontreRepository.getRencontresEnAttente()
                 .stream()
-                .filter(this::isInitiateurConnected)
+                .filter(Predicate.not(this::isInitiateurConnected))
                 .collect(Collectors.toCollection(ArrayList::new));
-
-        rencontreManagerService.setRencontresEnAttente(rencontresActives);
+        for (Rencontre rencontre : rencontresNonActives) {
+            if (rencontre.getAdversaire() != null && rencontre.getInitiateur() != null) continue;
+            rencontreRepository.changerEtatRencontre(rencontre.getIdRencontre(), ETAT_RENCONTRE.TERMINEE);
+        }
     }
 
     private boolean isInitiateurConnected(Rencontre rencontre) {
         Joueur initiateur = rencontre.getInitiateur();
         boolean isConnected = sseService.getSseEmitters().containsKey(initiateur.getId());
         if (!isConnected) {
-            initiateur.setEtat(EtatJoueur.EN_MENU);
+            initiateur.setEtat(ETAT_JOUEUR.EN_MENU);
         }
         return isConnected;
     }
+
 
     /* =====================================================
        Méthodes Privées - Initialisation de Rencontre
@@ -154,15 +168,14 @@ public class RencontreService {
 
     private void initializeJoinedRencontre(Rencontre rencontre, Joueur adversaire, String clientId) {
         // Préparation des joueurs
-        adversaire.setEtat(EtatJoueur.EN_PARTIE_ADVERSAIRE);
+        adversaire.setEtat(ETAT_JOUEUR.EN_PARTIE_ADVERSAIRE);
         Joueur initiateur = rencontre.getInitiateur();
-        initiateur.setEtat(EtatJoueur.EN_PARTIE_INITIATEUR);
+        initiateur.setEtat(ETAT_JOUEUR.EN_PARTIE_INITIATEUR);
 
         // Mise à jour de la rencontre
         rencontre.setAdversaire(adversaire);
-        rencontreManagerService.decrementNombreRencontreEnAttente(rencontre);
-        rencontreManagerService.addToRencontreMap(clientId, rencontre);
-        rencontreManagerService.addToRencontreMap(initiateur.getId(), rencontre);
+        rencontreRepository.changerEtatRencontre(rencontre.getIdRencontre(), ETAT_RENCONTRE.EN_COURS);
+        rencontreRepository.addRencontreParClient(clientId, rencontre);
         rencontre.setCurrentTour(new Tour(1));
 
         // Notifications
@@ -174,11 +187,11 @@ public class RencontreService {
     private void handleInitiateurDeconnecteSiBesoin(Rencontre rencontre) {
         Joueur initiateur = rencontre.getInitiateur();
         if (sseService.getSseEmitters().get(initiateur.getId()) == null) {
-            initiateur.setStrategieAutomatique(strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANTALEATOIRE));
+            initiateur.setStrategieAutomatique(strategieRepository.getStrategie(TYPE_STRATEGIE.DONNANTDONNANTALEATOIRE));
             initiateur = handleAbandon(rencontre, initiateur);
 
             Joueur adversaire = rencontre.getAdversaire();
-            TypeAction action = initiateur.jouer(
+            TYPE_ACTION action = initiateur.jouer(
                     getHistoriqueJoueur(rencontre, adversaire),
                     getDernierResultatJoueur(rencontre, adversaire)
             );
@@ -191,19 +204,19 @@ public class RencontreService {
         Joueur joueur = joueurService.getJoueurById(clientId);
         Rencontre rencontre;
         try {
-            rencontre = getRencontreByClientId(clientId);
+            rencontre = getRencontreEnCoursByClientId(clientId);
         } catch (RencontreNotFoundRestException e) {
             log.warn("rencontre non disponible");
             return;
         }
 
         if (sseService.getSseEmitters().get(joueur.getId()) == null) {
-            joueur.setStrategieAutomatique(strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANTALEATOIRE));
+            joueur.setStrategieAutomatique(strategieRepository.getStrategie(TYPE_STRATEGIE.DONNANTDONNANTALEATOIRE));
 
             joueur = handleAbandon(rencontre, joueur);
 
             Joueur adversaire = rencontre.getAdversaire();
-            TypeAction action = joueur.jouer(
+            TYPE_ACTION action = joueur.jouer(
                     getHistoriqueJoueur(rencontre, adversaire),
                     getDernierResultatJoueur(rencontre, adversaire));
             tourService.setActionJoueur(joueur, rencontre, action);
@@ -219,7 +232,7 @@ public class RencontreService {
        Méthodes Privées - Gestion Abandon / Actions Joueur
        ===================================================== */
 
-    public TypeAction handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TypeStrategie strategie, Joueur joueurOppose, String groupId) {
+    public TYPE_ACTION handlePlayerAbandon(Rencontre rencontre, Joueur joueur, TYPE_STRATEGIE strategie, Joueur joueurOppose, String groupId) {
         sseService.sendEvent(joueur.getId(), "player-abondonne", "Vous avez abandonné. Vous avez été remplacé par un robot.");
         String nomHumain = joueur.getNom();
 
@@ -228,19 +241,19 @@ public class RencontreService {
             strategieChoisie = switch (groupId) {
                 case "G2_5" -> {
                     fr.uga.strats.g5_2.models.Strategie strategieExternG2E5 = StrategieFactory.creeStrategie(StrategieEnumAdaptateurGr2E5.adapterInverse(strategie));
-                    yield new StrategieAdaptateurGr2E5(strategieExternG2E5, getHistoriqueJoueur(rencontre, joueur), joueur.getEtat() == EtatJoueur.EN_PARTIE_INITIATEUR);
+                    yield new StrategieAdaptateurGr2E5(strategieExternG2E5, getHistoriqueJoueur(rencontre, joueur), joueur.getEtat() == ETAT_JOUEUR.EN_PARTIE_INITIATEUR);
                 }
                 case "G2_10" -> {
                     Strategy strategieExternG2E10 = StrategyFactory.createStrategy(StrategieEnumAdaptateurGr2E10.adapterInverse(strategie));
                     yield new StrategieAdaptateurGr2E10(strategieExternG2E10, getHistoriqueJoueur(rencontre, joueur));
                 }
                 default -> (strategie != null)
-                        ? strategieFactoryService.getStrategie(strategie)
-                        : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
+                        ? strategieRepository.getStrategie(strategie)
+                        : strategieRepository.getStrategie(TYPE_STRATEGIE.DONNANTDONNANT);
             };
         } catch (NullPointerException e) {
-            strategieChoisie =(strategie != null) ? strategieFactoryService.getStrategie(strategie)
-                    : strategieFactoryService.getStrategie(TypeStrategie.DONNANTDONNANT);
+            strategieChoisie =(strategie != null) ? strategieRepository.getStrategie(strategie)
+                    : strategieRepository.getStrategie(TYPE_STRATEGIE.DONNANTDONNANT);
 
         }
 
@@ -248,9 +261,9 @@ public class RencontreService {
         joueur.setStrategieAutomatique(strategieChoisie);
 
         Joueur robot = handleAbandon(rencontre, joueur);
-        TypeAction action = robot.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
+        TYPE_ACTION action = robot.jouer(getHistoriqueJoueur(rencontre, joueurOppose), getDernierResultatJoueur(rencontre, joueurOppose));
 
-        joueur.setEtat(EtatJoueur.EN_MENU);
+        joueur.setEtat(ETAT_JOUEUR.EN_MENU);
         if (joueurOppose instanceof Humain) {
             sseService.sendEvent(joueurOppose.getId(), "opposite-player-abondonne", String.format(
                     "Le joueur %s a abandonné et a été remplacé par %s.", nomHumain, robot.getNom()
@@ -261,12 +274,12 @@ public class RencontreService {
 
     private Joueur handleAbandon(Rencontre rencontre, Joueur joueur) {
         Joueur robot = remplacerJoueurParRobot(joueur);
-        if (robot.getEtat() == EtatJoueur.EN_PARTIE_INITIATEUR) {
+        if (robot.getEtat() == ETAT_JOUEUR.EN_PARTIE_INITIATEUR) {
             rencontre.setInitiateur(robot);
-        } else if (robot.getEtat() == EtatJoueur.EN_PARTIE_ADVERSAIRE) {
+        } else if (robot.getEtat() == ETAT_JOUEUR.EN_PARTIE_ADVERSAIRE) {
             rencontre.setAdversaire(robot);
         }
-        joueur.setEtat(EtatJoueur.EN_MENU);
+        joueur.setEtat(ETAT_JOUEUR.EN_MENU);
         return robot;
     }
 
@@ -323,8 +336,8 @@ public class RencontreService {
 
     private void handleRobotActionAtTourStart(Rencontre rencontre, Joueur joueur, boolean isInitiateur) {
         if (joueur instanceof Robot) {
-            List<TypeAction> historiqueAdverse = isInitiateur ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur();
-            TypeAction action = joueur.jouer(historiqueAdverse, joueur.getScore());
+            List<TYPE_ACTION> historiqueAdverse = isInitiateur ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur();
+            TYPE_ACTION action = joueur.jouer(historiqueAdverse, joueur.getScore());
 
             Tour currentTour = rencontre.getCurrentTour();
             if (isInitiateur) {
@@ -356,7 +369,7 @@ public class RencontreService {
         );
     }
 
-    private void notifierJoueur(Joueur joueur, int numeroTour, TypeAction actionJoueur, TypeAction actionAdversaire, int scoreTour) {
+    private void notifierJoueur(Joueur joueur, int numeroTour, TYPE_ACTION actionJoueur, TYPE_ACTION actionAdversaire, int scoreTour) {
         if (joueur instanceof Humain) {
             sseService.sendEvent(
                     joueur.getId(),
@@ -377,7 +390,7 @@ public class RencontreService {
         inviteHumainSiNecessaire(rencontre.getAdversaire(), currentTour.getActionAdversaire(), tourNumber);
     }
 
-    private void inviteHumainSiNecessaire(Joueur joueur, TypeAction action, int tourNumber) {
+    private void inviteHumainSiNecessaire(Joueur joueur, TYPE_ACTION action, int tourNumber) {
         if (action == null && joueur instanceof Humain) {
             sseService.sendEvent(joueur.getId(), "make-choice", "Veuillez faire votre choix pour le tour " + tourNumber);
         }
@@ -408,8 +421,8 @@ public class RencontreService {
     }
 
     private void resetPlayersScoreAndState(Joueur initiateur, Joueur adversaire) {
-        initiateur.setEtat(EtatJoueur.EN_MENU);
-        adversaire.setEtat(EtatJoueur.EN_MENU);
+        initiateur.setEtat(ETAT_JOUEUR.EN_MENU);
+        adversaire.setEtat(ETAT_JOUEUR.EN_MENU);
         initiateur.setScore(0);
         adversaire.setScore(0);
     }
@@ -466,8 +479,8 @@ public class RencontreService {
         }
     }
 
-    private Rencontre getRencontreByClientId(String clientId) {
-        Rencontre rencontre = rencontreManagerService.getRencontreMap().get(clientId);
+    private Rencontre getRencontreEnCoursByClientId(String clientId) {
+        Rencontre rencontre = rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS);
         if (rencontre == null) {
             throw new RencontreNotFoundRestException("Rencontre non trouvée pour le client.", clientId);
         }
@@ -488,8 +501,8 @@ public class RencontreService {
         return (joueur == rencontre.getAdversaire()) ? rencontre.getInitiateur() : rencontre.getAdversaire();
     }
 
-    private List<TypeAction> getHistoriqueJoueur(Rencontre rencontre, Joueur joueur) {
-        return (joueur.getEtat() == EtatJoueur.EN_PARTIE_INITIATEUR)
+    private List<TYPE_ACTION> getHistoriqueJoueur(Rencontre rencontre, Joueur joueur) {
+        return (joueur.getEtat() == ETAT_JOUEUR.EN_PARTIE_INITIATEUR)
                 ? rencontre.getHistoriqueInitiateur()
                 : rencontre.getHistoriqueAdversaire();
     }
@@ -498,7 +511,7 @@ public class RencontreService {
         List<Tour> tours = rencontre.getTours();
         if (tours.isEmpty()) return 0;
         Tour dernierTour = tours.get(tours.size() - 1);
-        return (joueur.getEtat() == EtatJoueur.EN_PARTIE_INITIATEUR)
+        return (joueur.getEtat() == ETAT_JOUEUR.EN_PARTIE_INITIATEUR)
                 ? dernierTour.getScoreInitiateur()
                 : dernierTour.getScoreAdversaire();
     }

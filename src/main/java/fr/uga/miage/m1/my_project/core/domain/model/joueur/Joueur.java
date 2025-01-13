@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.core.domain.model.joueur;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.EtatJoueur;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_JOUEUR;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.miage.m1.my_project.core.domain.model.strategie.Strategie;
 import lombok.Data;
 import java.util.List;
@@ -13,7 +13,7 @@ public abstract class Joueur {
     protected String nom;
     protected int score;
     protected Strategie strategieAutomatique;
-    protected EtatJoueur etat;
+    protected ETAT_JOUEUR etat;
 
     protected Joueur(String id, String nom) {
         this.id = id;
@@ -25,5 +25,5 @@ public abstract class Joueur {
         this.score += s;
     }
 
-    public abstract TypeAction jouer(List<TypeAction> historiqueAdversaire, int dernierResultat);
+    public abstract TYPE_ACTION jouer(List<TYPE_ACTION> historiqueAdversaire, int dernierResultat);
 }

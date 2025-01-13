@@ -1,6 +1,7 @@
 package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_5;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_5.StrategieTourAdapterGr2E5;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.strats.g5_2.enums.Decision;
 import fr.uga.strats.g5_2.models.Tour;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,8 @@ class StrategieTourAdapterGr2E5Test {
         fr.uga.miage.m1.my_project.core.domain.model.Tour tourIntern = new fr.uga.miage.m1.my_project.core.domain.model.Tour(
 
         );
-        tourIntern.setActionInitiateur(TypeAction.COOPERER);
-        tourIntern.setActionAdversaire(TypeAction.TRAHIR);
+        tourIntern.setActionInitiateur(TYPE_ACTION.COOPERER);
+        tourIntern.setActionAdversaire(TYPE_ACTION.TRAHIR);
 
         Tour tourExterne = StrategieTourAdapterGr2E5.adapter(tourIntern);
 
@@ -33,7 +34,7 @@ class StrategieTourAdapterGr2E5Test {
 
         );
 
-        tourIntern.setActionInitiateur(TypeAction.TRAHIR);
+        tourIntern.setActionInitiateur(TYPE_ACTION.TRAHIR);
 
         assertThrows(IllegalArgumentException.class, () -> {
             StrategieTourAdapterGr2E5.adapter(tourIntern);

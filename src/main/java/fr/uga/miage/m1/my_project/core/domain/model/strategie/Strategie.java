@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.List;
@@ -29,9 +29,9 @@ public abstract class Strategie  {
 
     }
 
-    public abstract TypeAction getAction(List<TypeAction> actions, int dernierResultat);
+    public abstract TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat);
 
-    public TypeAction getLastAction(List<TypeAction> actions) {
+    public TYPE_ACTION getLastAction(List<TYPE_ACTION> actions) {
         return actions.get(actions.size() - 1);
     }
 }

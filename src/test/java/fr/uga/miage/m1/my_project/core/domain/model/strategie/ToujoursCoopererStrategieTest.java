@@ -1,5 +1,5 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -17,25 +17,25 @@ class ToujoursCoopererStrategieTest {
 
     @Test
     void testAlwaysCooperate() {
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
         // On peut ajouter des actions à la liste, mais cela ne devrait pas affecter le résultat
-        actions.add(TypeAction.TRAHIR);
-        actions.add(TypeAction.COOPERER);
+        actions.add(TYPE_ACTION.TRAHIR);
+        actions.add(TYPE_ACTION.COOPERER);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifie que la stratégie retourne toujours COOPERER
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit toujours retourner COOPERER, peu importe les actions précédentes.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit toujours retourner COOPERER, peu importe les actions précédentes.");
     }
 
     @Test
     void testAlwaysCooperateWithEmptyList() {
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifie que la stratégie retourne COOPERER même avec une liste vide
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit toujours retourner COOPERER, même avec une liste vide.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit toujours retourner COOPERER, même avec une liste vide.");
     }
 }
 

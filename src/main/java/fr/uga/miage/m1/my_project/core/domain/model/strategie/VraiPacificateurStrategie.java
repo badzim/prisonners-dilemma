@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import java.security.SecureRandom;
 import java.util.List;
 
@@ -13,23 +13,23 @@ public class VraiPacificateurStrategie extends Strategie {
     }
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         // Si aucune action précédente, coopère par défaut
         if (actions.isEmpty()) {
-            return TypeAction.COOPERER;
+            return TYPE_ACTION.COOPERER;
         }
 
         // Récupère les deux dernières actions de l'adversaire
-        TypeAction derniereAction = actions.get(actions.size() - 1);
-        TypeAction avantDerniereAction = (actions.size() > 1) ? actions.get(actions.size() - 2) : null;
+        TYPE_ACTION derniereAction = actions.get(actions.size() - 1);
+        TYPE_ACTION avantDerniereAction = (actions.size() > 1) ? actions.get(actions.size() - 2) : null;
 
         // Si l'adversaire a trahi deux fois de suite, on trahit immédiatement
-        if (avantDerniereAction == TypeAction.TRAHIR && derniereAction == TypeAction.TRAHIR) {
+        if (avantDerniereAction == TYPE_ACTION.TRAHIR && derniereAction == TYPE_ACTION.TRAHIR) {
             // Avec une probabilité de coopérer malgré la trahison
             if (getRandom().nextDouble() < PROBABILITE_COOPERATION) {
-                return TypeAction.COOPERER;
+                return TYPE_ACTION.COOPERER;
             }
-            return TypeAction.TRAHIR;
+            return TYPE_ACTION.TRAHIR;
         }
 
         // Sinon, on répète l'action de l'adversaire

@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -14,15 +14,15 @@ public class DonnantPourDeuxDonnantsEtAleatoireStrategie extends Strategie {
     }
 
     @Override
-    public TypeAction getAction(List<TypeAction> actions, int dernierResultat) {
+    public TYPE_ACTION getAction(List<TYPE_ACTION> actions, int dernierResultat) {
         // Parfois, joue un coup au hasard (par exemple, 10% du temps)
         if (getRandom().nextInt(10) == 0) {
-            return getSecondRandom().nextBoolean() ? TypeAction.COOPERER : TypeAction.TRAHIR;
+            return getSecondRandom().nextBoolean() ? TYPE_ACTION.COOPERER : TYPE_ACTION.TRAHIR;
         }
 
         // Si aucune action précédente, coopère par défaut
         if (actions.isEmpty()) {
-            return TypeAction.COOPERER;
+            return TYPE_ACTION.COOPERER;
         }
 
         // Si l'adversaire a fait le même choix deux fois de suite, reproduit ce choix
@@ -31,6 +31,6 @@ public class DonnantPourDeuxDonnantsEtAleatoireStrategie extends Strategie {
         }
 
         // Sinon, trahit
-        return TypeAction.TRAHIR;
+        return TYPE_ACTION.TRAHIR;
     }
 }

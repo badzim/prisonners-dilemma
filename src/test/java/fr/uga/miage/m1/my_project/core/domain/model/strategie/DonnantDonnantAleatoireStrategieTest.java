@@ -1,5 +1,5 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,14 +28,14 @@ class DonnantDonnantAleatoireStrategieTest {
 
     @Test
     void testRandomOrLastAction() {
-        List<TypeAction> actions = new ArrayList<>();
-        actions.add(TypeAction.COOPERER);
-        actions.add(TypeAction.TRAHIR);
+        List<TYPE_ACTION> actions = new ArrayList<>();
+        actions.add(TYPE_ACTION.COOPERER);
+        actions.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Le résultat doit être soit la dernière action de l'adversaire (TRAHIR), soit une action aléatoire (COOPERER ou TRAHIR)
-        assertTrue(result == TypeAction.COOPERER || result == TypeAction.TRAHIR,
+        assertTrue(result == TYPE_ACTION.COOPERER || result == TYPE_ACTION.TRAHIR,
                 "La stratégie doit retourner soit la dernière action de l'adversaire, soit une action aléatoire.");
     }
 
@@ -44,12 +44,12 @@ class DonnantDonnantAleatoireStrategieTest {
         // Configurer le mock pour retourner false
         when(mockRandom.nextBoolean()).thenReturn(false);
 
-        List<TypeAction> actions = new ArrayList<>();
+        List<TYPE_ACTION> actions = new ArrayList<>();
 
-        TypeAction result = strategie.getAction(actions, 0);
+        TYPE_ACTION result = strategie.getAction(actions, 0);
 
         // Vérifier que getLastAction n'est pas appelé car la liste est vide
         verify(mockRandom, times(1)).nextBoolean();
-        assertEquals(TypeAction.COOPERER, result);
+        assertEquals(TYPE_ACTION.COOPERER, result);
     }
 }

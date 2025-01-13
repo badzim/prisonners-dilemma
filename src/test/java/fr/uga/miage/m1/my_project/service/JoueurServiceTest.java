@@ -1,8 +1,8 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.core.domain.port.output.JoueurRepository;
 import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.EtatJoueur;
+import fr.uga.miage.m1.my_project.core.port.output.JoueurRepository;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_JOUEUR;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class JoueurServiceTest {
         assertNotNull(result, "Un joueur doit être créé si non existant.");
         assertTrue(result instanceof Humain, "Le joueur créé doit être de type Humain.");
         assertEquals(clientId, result.getId(), "L'ID du joueur doit correspondre au clientId.");
-        assertEquals(EtatJoueur.EN_MENU, result.getEtat(), "Le joueur doit être initialement dans l'état EN_MENU.");
+        assertEquals(ETAT_JOUEUR.EN_MENU, result.getEtat(), "Le joueur doit être initialement dans l'état EN_MENU.");
     }
 
 
@@ -44,7 +44,7 @@ class JoueurServiceTest {
         // Arrange
         String clientId = "client123";
         Joueur existingJoueur = new Humain(clientId, "Nom Test");
-        existingJoueur.setEtat(EtatJoueur.EN_ATTENTE);
+        existingJoueur.setEtat(ETAT_JOUEUR.EN_ATTENTE);
 
         // Ajouter un joueur existant dans la map
         joueurRepository.save(existingJoueur);
@@ -62,11 +62,11 @@ class JoueurServiceTest {
         // Arrange
         String clientId = "client123";
         Joueur joueur = new Humain(clientId, "Nom Test");
-        joueur.setEtat(EtatJoueur.EN_MENU);
+        joueur.setEtat(ETAT_JOUEUR.EN_MENU);
 
         joueurRepository.save(joueur);
 
         // Act & Assert
-        assertSame(EtatJoueur.EN_MENU, joueurService.getJoueurById(clientId).getEtat());
+        assertSame(ETAT_JOUEUR.EN_MENU, joueurService.getJoueurById(clientId).getEtat());
     }
 }

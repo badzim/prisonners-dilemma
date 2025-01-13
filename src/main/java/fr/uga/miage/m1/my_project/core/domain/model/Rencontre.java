@@ -1,6 +1,7 @@
 package fr.uga.miage.m1.my_project.core.domain.model;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +13,11 @@ public class Rencontre{
     private Joueur initiateur;
     private Joueur adversaire;
     private int nombreTours;
-    private List<TypeAction> historiqueInitiateur;
-    private List<TypeAction> historiqueAdversaire;
+    private List<TYPE_ACTION> historiqueInitiateur;
+    private List<TYPE_ACTION> historiqueAdversaire;
     private List<Tour> tours;
     private Tour currentTour;
+    private ETAT_RENCONTRE etatRencontre;
 
     public Rencontre() {
         this.idRencontre = UUID.randomUUID().toString();
@@ -26,6 +28,6 @@ public class Rencontre{
         this.historiqueAdversaire = new ArrayList<>();
         this.tours = new ArrayList<>();
         this.currentTour = null;
-
+        this.etatRencontre = ETAT_RENCONTRE.EN_ATTENTE;
     }
 }

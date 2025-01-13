@@ -2,10 +2,11 @@ package fr.uga.miage.m1.my_project.service;
 
 
 import fr.uga.miage.m1.my_project.TestConfig;
+import fr.uga.miage.m1.my_project.core.domain.service.TourService;
 import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class TourServiceTest implements TestConfig {
 
     @Autowired
-    private  TourService tourService;
+    private TourService tourService;
 
     @Test
     void testBothCooperate() {
         Tour tour = Tour.builder()
-                .actionInitiateur(TypeAction.COOPERER)
-                .actionAdversaire(TypeAction.COOPERER)
+                .actionInitiateur(TYPE_ACTION.COOPERER)
+                .actionAdversaire(TYPE_ACTION.COOPERER)
                 .build();
         tourService.calculerScore(tour);
         assertEquals(3, tour.getScoreInitiateur(), "Le score de l'initiateur devrait être 3 lorsque les deux coopèrent.");
@@ -33,8 +34,8 @@ class TourServiceTest implements TestConfig {
     @Test
     void testInitiatorCooperatesAdversaryBetrays() {
         Tour tour = Tour.builder()
-                .actionInitiateur(TypeAction.COOPERER)
-                .actionAdversaire(TypeAction.TRAHIR)
+                .actionInitiateur(TYPE_ACTION.COOPERER)
+                .actionAdversaire(TYPE_ACTION.TRAHIR)
                 .build();
         tourService.calculerScore(tour);
 
@@ -45,8 +46,8 @@ class TourServiceTest implements TestConfig {
     @Test
     void testInitiatorBetraysAdversaryCooperates() {
         Tour tour = Tour.builder()
-                .actionInitiateur(TypeAction.TRAHIR)
-                .actionAdversaire(TypeAction.COOPERER)
+                .actionInitiateur(TYPE_ACTION.TRAHIR)
+                .actionAdversaire(TYPE_ACTION.COOPERER)
                 .build();
         tourService.calculerScore(tour);
 
@@ -57,8 +58,8 @@ class TourServiceTest implements TestConfig {
     @Test
     void testBothBetray() {
         Tour tour = Tour.builder()
-                .actionInitiateur(TypeAction.TRAHIR)
-                .actionAdversaire(TypeAction.TRAHIR)
+                .actionInitiateur(TYPE_ACTION.TRAHIR)
+                .actionAdversaire(TYPE_ACTION.TRAHIR)
                 .build();
         tourService.calculerScore(tour);
 
@@ -79,7 +80,7 @@ class TourServiceTest implements TestConfig {
         Tour tour = new Tour(1);
         rencontre.setCurrentTour(tour);
 
-        TypeAction action = TypeAction.COOPERER;
+        TYPE_ACTION action = TYPE_ACTION.COOPERER;
 
         // Act
         assertDoesNotThrow(() -> tourService.setActionJoueur(initiateur, rencontre, action));
@@ -101,7 +102,7 @@ class TourServiceTest implements TestConfig {
         Tour tour = new Tour(1);
         rencontre.setCurrentTour(tour);
 
-        TypeAction action = TypeAction.TRAHIR;
+        TYPE_ACTION action = TYPE_ACTION.TRAHIR;
 
         // Act
         assertDoesNotThrow(() -> tourService.setActionJoueur(adversaire, rencontre, action));
@@ -124,7 +125,7 @@ class TourServiceTest implements TestConfig {
         Tour tour = new Tour(1);
         rencontre.setCurrentTour(tour);
 
-        TypeAction action = TypeAction.COOPERER;
+        TYPE_ACTION action = TYPE_ACTION.COOPERER;
 
         // Act & Assert
         InvalidActionRestException exception = assertThrows(InvalidActionRestException.class, () -> {
@@ -145,10 +146,10 @@ class TourServiceTest implements TestConfig {
         rencontre.setAdversaire(adversaire);
 
         Tour tour = new Tour(1);
-        tour.setActionInitiateur(TypeAction.COOPERER);
+        tour.setActionInitiateur(TYPE_ACTION.COOPERER);
         rencontre.setCurrentTour(tour);
 
-        TypeAction action = TypeAction.TRAHIR;
+        TYPE_ACTION action = TYPE_ACTION.TRAHIR;
 
         // Act & Assert
         InvalidActionRestException exception = assertThrows(InvalidActionRestException.class, () -> {
@@ -169,10 +170,10 @@ class TourServiceTest implements TestConfig {
         rencontre.setAdversaire(adversaire);
 
         Tour tour = new Tour(1);
-        tour.setActionAdversaire(TypeAction.TRAHIR);
+        tour.setActionAdversaire(TYPE_ACTION.TRAHIR);
         rencontre.setCurrentTour(tour);
 
-        TypeAction action = TypeAction.COOPERER;
+        TYPE_ACTION action = TYPE_ACTION.COOPERER;
 
         // Act & Assert
         InvalidActionRestException exception = assertThrows(InvalidActionRestException.class, () -> {

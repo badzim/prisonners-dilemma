@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.core.domain.model.strategie;
 
-import fr.uga.miage.m1.my_project.core.domain.model.enums.TypeAction;
+import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +26,11 @@ class SondeurRepentantStrategieTest {
 
     @Test
     void testCooperateWhenNoPreviousActions() {
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
 
-        TypeAction result = strategie.getAction(actionsAdversaire, 0);
+        TYPE_ACTION result = strategie.getAction(actionsAdversaire, 0);
 
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer par défaut si aucune action précédente.");
     }
 
     @Test
@@ -38,12 +38,12 @@ class SondeurRepentantStrategieTest {
         // Simuler que le coup aléatoire ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
 
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
-        actionsAdversaire.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
-        TypeAction result = strategie.getAction(actionsAdversaire, 0);
+        TYPE_ACTION result = strategie.getAction(actionsAdversaire, 0);
 
-        assertEquals(TypeAction.COOPERER, result, "La stratégie doit coopérer si l'adversaire a coopéré et que le test ne se produit pas.");
+        assertEquals(TYPE_ACTION.COOPERER, result, "La stratégie doit coopérer si l'adversaire a coopéré et que le test ne se produit pas.");
     }
 
     @Test
@@ -51,100 +51,100 @@ class SondeurRepentantStrategieTest {
         // Simuler que le coup aléatoire se produit
         when(mockRandom.nextInt(10)).thenReturn(0);
 
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
-        actionsAdversaire.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
-        TypeAction result = strategie.getAction(actionsAdversaire, 0);
+        TYPE_ACTION result = strategie.getAction(actionsAdversaire, 0);
 
-        assertEquals(TypeAction.TRAHIR, result, "La stratégie doit trahir lors du test aléatoire.");
+        assertEquals(TYPE_ACTION.TRAHIR, result, "La stratégie doit trahir lors du test aléatoire.");
     }
 
     @Test
     void testRepentanceAfterOpponentBetrayal() {
         // Simuler que le test de trahison s'est produit précédemment
         when(mockRandom.nextInt(10)).thenReturn(0); // Premier appel : test de trahison
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
-        actionsAdversaire.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Premier appel : nous trahissons pour tester
-        TypeAction result1 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, result1, "La stratégie doit trahir pour tester.");
+        TYPE_ACTION result1 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, result1, "La stratégie doit trahir pour tester.");
 
         // Simuler que l'adversaire a trahi en réponse
-        actionsAdversaire.add(TypeAction.TRAHIR);
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
         // Deuxième appel : nous devons coopérer par repentance
-        TypeAction result2 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result2, "La stratégie doit coopérer par repentance après que l'adversaire ait trahi en réponse.");
+        TYPE_ACTION result2 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result2, "La stratégie doit coopérer par repentance après que l'adversaire ait trahi en réponse.");
     }
 
     @Test
     void testContinueCooperatingAfterOpponentCooperatesPostTest() {
         // Simuler que le test de trahison s'est produit précédemment
         when(mockRandom.nextInt(10)).thenReturn(0); // Premier appel : test de trahison
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
-        actionsAdversaire.add(TypeAction.COOPERER);
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Premier appel : nous trahissons pour tester
-        TypeAction result1 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, result1, "La stratégie doit trahir pour tester.");
+        TYPE_ACTION result1 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, result1, "La stratégie doit trahir pour tester.");
 
         // Simuler que l'adversaire a coopéré en réponse
-        actionsAdversaire.add(TypeAction.COOPERER);
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Deuxième appel : nous continuons normalement (coopération)
         when(mockRandom.nextInt(10)).thenReturn(1); // Le test ne se produit pas
-        TypeAction result2 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result2, "La stratégie doit coopérer si l'adversaire a coopéré après notre test.");
+        TYPE_ACTION result2 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result2, "La stratégie doit coopérer si l'adversaire a coopéré après notre test.");
     }
 
     @Test
     void testBetrayIfOpponentBetrayed() {
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
-        actionsAdversaire.add(TypeAction.TRAHIR);
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
-        TypeAction result = strategie.getAction(actionsAdversaire, 0);
+        TYPE_ACTION result = strategie.getAction(actionsAdversaire, 0);
 
-        assertEquals(TypeAction.TRAHIR, result, "La stratégie doit trahir si l'adversaire a trahi au dernier coup.");
+        assertEquals(TYPE_ACTION.TRAHIR, result, "La stratégie doit trahir si l'adversaire a trahi au dernier coup.");
     }
 
     @Test
     void testSequenceOfActions() {
-        List<TypeAction> actionsAdversaire = new ArrayList<>();
+        List<TYPE_ACTION> actionsAdversaire = new ArrayList<>();
 
         // Tour 1 : Aucun historique, doit coopérer
-        TypeAction result1 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result1, "Tour 1 : doit coopérer par défaut.");
+        TYPE_ACTION result1 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result1, "Tour 1 : doit coopérer par défaut.");
 
         // L'adversaire coopère
-        actionsAdversaire.add(TypeAction.COOPERER);
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Tour 2 : Simuler que le test ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
-        TypeAction result2 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result2, "Tour 2 : doit coopérer car l'adversaire a coopéré et le test ne se produit pas.");
+        TYPE_ACTION result2 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result2, "Tour 2 : doit coopérer car l'adversaire a coopéré et le test ne se produit pas.");
 
         // L'adversaire coopère
-        actionsAdversaire.add(TypeAction.COOPERER);
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Tour 3 : Simuler que le test se produit
         when(mockRandom.nextInt(10)).thenReturn(0);
-        TypeAction result3 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.TRAHIR, result3, "Tour 3 : doit trahir pour tester.");
+        TYPE_ACTION result3 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.TRAHIR, result3, "Tour 3 : doit trahir pour tester.");
 
         // L'adversaire trahit en réponse
-        actionsAdversaire.add(TypeAction.TRAHIR);
+        actionsAdversaire.add(TYPE_ACTION.TRAHIR);
 
         // Tour 4 : Doit coopérer par repentance
-        TypeAction result4 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result4, "Tour 4 : doit coopérer par repentance.");
+        TYPE_ACTION result4 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result4, "Tour 4 : doit coopérer par repentance.");
 
         // L'adversaire coopère
-        actionsAdversaire.add(TypeAction.COOPERER);
+        actionsAdversaire.add(TYPE_ACTION.COOPERER);
 
         // Tour 5 : Simuler que le test ne se produit pas
         when(mockRandom.nextInt(10)).thenReturn(1);
-        TypeAction result5 = strategie.getAction(actionsAdversaire, 0);
-        assertEquals(TypeAction.COOPERER, result5, "Tour 5 : doit coopérer car l'adversaire a coopéré et le test ne se produit pas.");
+        TYPE_ACTION result5 = strategie.getAction(actionsAdversaire, 0);
+        assertEquals(TYPE_ACTION.COOPERER, result5, "Tour 5 : doit coopérer car l'adversaire a coopéré et le test ne se produit pas.");
     }
 }

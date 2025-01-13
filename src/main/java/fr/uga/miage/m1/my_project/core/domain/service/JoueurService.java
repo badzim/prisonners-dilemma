@@ -1,23 +1,23 @@
 package fr.uga.miage.m1.my_project.core.domain.service;
 
-import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
-import fr.uga.miage.m1.my_project.core.domain.port.input.GetJoueurUseCase;
-import fr.uga.miage.m1.my_project.core.domain.port.output.JoueurRepository;
+import fr.uga.miage.m1.my_project.core.port.input.JoueurServicePort;
+import fr.uga.miage.m1.my_project.core.port.output.JoueurRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Slf4j
-@Service
+@Service // dépendance faible qui n'affecte pas la logique métier, on se permet donc d'introduire cette dépendance à notre archi.
+@Primary
 @Data
 @RequiredArgsConstructor
-public class JoueurService implements GetJoueurUseCase  {
+public class JoueurService implements JoueurServicePort {
 
+    @Qualifier("inMemoryJoueurRepository")
     private final JoueurRepository joueurRepository;
 
     /**
