@@ -1,9 +1,10 @@
 package fr.uga.miage.m1.my_project.web.service;
 
 import fr.uga.miage.m1.my_project.core.exception.rest.ClientIdUsedRestException;
-import lombok.Data;
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
@@ -13,10 +14,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Data
 @Service
 @RequiredArgsConstructor
-public class SseService {
+@Primary
+public class SseServiceImpl implements EventEmitter {
+
+    // il me faut sseRepository ici hmm
 
     private final Map<String, SseEmitter> sseEmitters = new ConcurrentHashMap<>();
 
@@ -34,6 +37,11 @@ public class SseService {
 
             sseEmitters.put(clientId, emitter);
         return emitter;
+    }
+
+    @Override
+    public Map<String, SseEmitter> getSseEmitters() {
+        return sseEmitters;
     }
 
     private SseEmitter createSseEmitter(String clientId) {

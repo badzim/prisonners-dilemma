@@ -1,7 +1,7 @@
 package fr.uga.miage.m1.my_project.service;
 
-import fr.uga.miage.m1.my_project.web.service.PingSchedulerService;
-import fr.uga.miage.m1.my_project.web.service.SseService;
+import fr.uga.miage.m1.my_project.web.service.PingSchedulerServiceImpl;
+import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -18,10 +18,10 @@ import static org.mockito.Mockito.*;
 class SchedulerServiceTest {
 
     @SpyBean
-    private PingSchedulerService pingSchedulerService;
+    private PingSchedulerServiceImpl pingSchedulerServiceImpl;
 
     @SpyBean
-    private SseService sseService;
+    private SseServiceImpl sseServiceImpl;
 
     @BeforeEach
     void setUp() {
@@ -32,15 +32,15 @@ class SchedulerServiceTest {
     void testStartSchedulerWithException() throws InterruptedException {
         // Arrange
         doThrow(new RuntimeException("Simulated Exception"))
-                .when(sseService).handleDisconnectedPlayers();
+                .when(sseServiceImpl).handleDisconnectedPlayers();
 
         // Act
-        pingSchedulerService.startScheduler();
+        pingSchedulerServiceImpl.startScheduler();
 
         // Simuler un temps d'attente pour permettre au scheduler de s'exécuter
         // Use Awaitility to wait until the mocked method has been called at least once
         await().atMost(10, SECONDS).untilAsserted(() ->
-                verify(sseService, atLeast(1)).handleDisconnectedPlayers()
+                verify(sseServiceImpl, atLeast(1)).handleDisconnectedPlayers()
         );
 
         // Assert
@@ -51,10 +51,10 @@ class SchedulerServiceTest {
         // Arrange
         ScheduledExecutorService pingSchedulerMock = mock(ScheduledExecutorService.class);
         doReturn(false).when(pingSchedulerMock).isShutdown();
-        pingSchedulerService.setPingScheduler(pingSchedulerMock);
+        pingSchedulerServiceImpl.setPingScheduler(pingSchedulerMock);
 
         // Act
-        pingSchedulerService.stopScheduler();
+        pingSchedulerServiceImpl.stopScheduler();
 
         // Assert
         verify(pingSchedulerMock, times(1)).shutdown();

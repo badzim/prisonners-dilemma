@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.controller;
 
-import fr.uga.miage.m1.my_project.web.service.SseService;
+import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,7 +30,7 @@ class SseControllerTest {
     private TestRestTemplate testRestTemplate;
 
     @SpyBean
-    private SseService sseService;
+    private SseServiceImpl sseServiceImpl;
 
     @LocalServerPort
     private int port;
@@ -57,7 +57,7 @@ class SseControllerTest {
                         () -> System.out.println("Flux terminé")
                 );
         // Envoyer un événement
-        sseService.sendEvent(clientId, "testEvent", "testData");
+        sseServiceImpl.sendEvent(clientId, "testEvent", "testData");
 
         // Attendre que l'événement soit reçu
         assertTrue(latch.await(5, TimeUnit.SECONDS), "L'événement n'a pas été reçu");
@@ -66,7 +66,7 @@ class SseControllerTest {
         subscription.dispose();
 
         // Attendre un peu pour ping le sse et declancher le onComplete...
-        await().atMost(30, TimeUnit.SECONDS).until(() -> !sseService.getSseEmitters().containsKey(clientId));
+        await().atMost(30, TimeUnit.SECONDS).until(() -> !sseServiceImpl.getSseEmitters().containsKey(clientId));
 
     }
 
@@ -77,7 +77,7 @@ class SseControllerTest {
         String message = "Test message";
 
         // Simuler un comportement dans le service
-        doNothing().when(sseService).sendEvent(clientId, "message", message);
+        doNothing().when(sseServiceImpl).sendEvent(clientId, "message", message);
 
         // Effectuer la requête POST
         ResponseEntity<String> response = testRestTemplate.postForEntity(
@@ -92,7 +92,7 @@ class SseControllerTest {
         assertEquals("Si le client était connecté, le message a été envoyé.", response.getBody());
 
         // Vérifier que le service a bien été appelé
-        verify(sseService, times(1)).sendEvent(clientId, "message", message);
+        verify(sseServiceImpl, times(1)).sendEvent(clientId, "message", message);
     }
 
     @Test
@@ -101,7 +101,7 @@ class SseControllerTest {
         String message = "Test message";
 
         // Simuler un comportement dans le service
-        doNothing().when(sseService).sendEvent(clientId, "message", message);
+        doNothing().when(sseServiceImpl).sendEvent(clientId, "message", message);
 
         ResponseEntity<String> response = testRestTemplate.postForEntity(
                 "/api/sse/send/" + clientId,
@@ -115,7 +115,7 @@ class SseControllerTest {
         assertEquals("Si le client était connecté, le message a été envoyé.", response.getBody());
 
         // Vérifier que le service a bien été appelé
-        verify(sseService, times(1)).sendEvent(clientId, "message", message);
+        verify(sseServiceImpl, times(1)).sendEvent(clientId, "message", message);
     }
 
     @Test
@@ -134,6 +134,6 @@ class SseControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Message diffusé à tous les clients.", response.getBody());
 
-        verify(sseService, times(1)).broadcast("broadcast",message);
+        verify(sseServiceImpl, times(1)).broadcast("broadcast",message);
     }
 }

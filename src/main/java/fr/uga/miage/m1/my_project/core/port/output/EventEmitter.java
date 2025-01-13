@@ -2,10 +2,13 @@ package fr.uga.miage.m1.my_project.core.port.output;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
+import java.util.Map;
 
 public interface EventEmitter {
     // Ajouter un SseEmitter pour un client donné
     SseEmitter addSseEmitter(String clientId);
+
+    Map<String, SseEmitter> getSseEmitters();
 
     // Diffuser un message à tous les clients connectés
     void broadcast(String eventName, String data);

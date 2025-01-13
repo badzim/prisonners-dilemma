@@ -15,11 +15,11 @@ import fr.uga.miage.m1.my_project.core.domain.model.joueur.*;
 import fr.uga.miage.m1.my_project.core.domain.model.strategie.*;
 import fr.uga.miage.m1.my_project.core.port.input.JoueurServicePort;
 import fr.uga.miage.m1.my_project.core.port.input.TourServicePort;
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
 import fr.uga.miage.m1.my_project.core.port.output.StrategieRepository;
 import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
 import fr.uga.miage.m1.my_project.web.restapi.mapper.RencontreMapper;
-import fr.uga.miage.m1.my_project.web.service.SseService;
 import fr.uga.strats.g5_2.factory.StrategieFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,8 @@ public class RencontreService {
     private final JoueurServicePort joueurService;
     @Qualifier("tourService")
     private final TourServicePort tourService;
-    private final SseService sseService;
+    @Qualifier("sseServiceImpl")
+    private final EventEmitter sseService;
 
 
 

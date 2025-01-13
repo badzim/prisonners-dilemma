@@ -1,6 +1,6 @@
 package fr.uga.miage.m1.my_project.web.controller;
 
-import fr.uga.miage.m1.my_project.web.service.SseService;
+import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Slf4j
 public class SseController {
 
-    private final SseService sseService;
+    private final SseServiceImpl sseServiceImpl;
 
 
 
@@ -22,9 +22,9 @@ public class SseController {
     @GetMapping("/subscribe/{clientId}")
     public ResponseEntity<SseEmitter> subscribe(@PathVariable String clientId) {
         try {
-            SseEmitter emitter = sseService.addSseEmitter(clientId);
+            SseEmitter emitter = sseServiceImpl.addSseEmitter(clientId);
             log.info("Client {} abonné avec succès", clientId);
-            sseService.sendEvent(clientId, "ping", "ping");
+            sseServiceImpl.sendEvent(clientId, "ping", "ping");
             return ResponseEntity.ok(emitter);
         } catch (IllegalStateException e) {
             log.error("Opération asynchrone déjà commencée ou terminée pour le client {}: {}", clientId, e.getMessage());
@@ -35,14 +35,14 @@ public class SseController {
     // Endpoint pour envoyer un message à un autre client
     @PostMapping("/send/{clientId}")
     public ResponseEntity<String> sendMessage(@PathVariable String clientId, @RequestBody String message) {
-        sseService.sendEvent(clientId, "message", message);
+        sseServiceImpl.sendEvent(clientId, "message", message);
         return ResponseEntity.ok("Si le client était connecté, le message a été envoyé.");
     }
 
     // Endpoint pour envoyer un message global
     @PostMapping("/broadcast")
     public ResponseEntity<String> broadcast(@RequestBody String message) {
-        sseService.broadcast("broadcast", message);
+        sseServiceImpl.broadcast("broadcast", message);
         return ResponseEntity.ok("Message diffusé à tous les clients.");
     }
 }
