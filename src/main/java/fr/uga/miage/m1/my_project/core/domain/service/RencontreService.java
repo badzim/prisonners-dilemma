@@ -285,7 +285,7 @@ public class RencontreService implements RencontreServicePort {
         return robot;
     }
 
-    private Joueur remplacerJoueurParRobot(Joueur joueur) {
+    public Joueur remplacerJoueurParRobot(Joueur joueur) {
         Strategie strategie = joueur.getStrategieAutomatique();
         return new Robot(joueur.getId() + "_ai", joueur.getNom() + "_ai", joueur.getScore(), strategie, joueur.getEtat());
     }

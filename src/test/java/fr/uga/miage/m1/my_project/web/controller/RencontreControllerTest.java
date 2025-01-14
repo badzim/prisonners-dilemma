@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.controller;
+package fr.uga.miage.m1.my_project.web.controller;
 
 import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import org.junit.jupiter.api.BeforeEach;

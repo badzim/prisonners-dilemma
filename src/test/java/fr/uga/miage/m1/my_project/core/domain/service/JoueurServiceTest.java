@@ -1,6 +1,5 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.core.domain.service;
 
-import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
 import fr.uga.miage.m1.my_project.core.port.output.JoueurRepository;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_JOUEUR;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;

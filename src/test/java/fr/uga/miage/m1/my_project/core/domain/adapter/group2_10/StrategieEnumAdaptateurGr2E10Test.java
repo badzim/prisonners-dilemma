@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.infrastructure.adaptateur.group2_10;
+package fr.uga.miage.m1.my_project.core.domain.adapter.group2_10;
 
 import fr.uga.m1miage.pc.strategy.StrategyType;
 import fr.uga.miage.m1.my_project.core.domain.adaptater.group2_10.StrategieEnumAdaptateurGr2E10;

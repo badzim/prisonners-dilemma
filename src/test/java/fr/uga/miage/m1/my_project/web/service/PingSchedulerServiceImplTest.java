@@ -1,7 +1,5 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.web.service;
 
-import fr.uga.miage.m1.my_project.web.service.PingSchedulerServiceImpl;
-import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -15,7 +13,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class SchedulerServiceTest {
+class PingSchedulerServiceImplTest {
 
     @SpyBean
     private PingSchedulerServiceImpl pingSchedulerServiceImpl;

@@ -1,8 +1,7 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.core.domain.service;
 
 
 import fr.uga.miage.m1.my_project.TestConfig;
-import fr.uga.miage.m1.my_project.core.domain.service.TourService;
 import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;

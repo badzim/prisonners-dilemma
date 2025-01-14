@@ -1,9 +1,8 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.persistence.memory;
 
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
-import fr.uga.miage.m1.my_project.persistence.memory.InMemoryRencontreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

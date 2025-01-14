@@ -28,16 +28,16 @@ public class StrategieTypeActionAdaptateurGr2E10 {
         return action;
     }
 
-    public static String adapter(TYPE_ACTION TYPEACTION) {
-        String decision = correspondanceInverse.get(TYPEACTION);
+    public static String adapter(TYPE_ACTION typeAction) {
+        String decision = correspondanceInverse.get(typeAction);
         if (decision == null) {
-            throw new IllegalArgumentException("Aucune correspondance trouvée pour : " + TYPEACTION);
+            throw new IllegalArgumentException("Aucune correspondance trouvée pour : " + typeAction);
         }
         return decision;
     }
 
-    public static List<String> adapter(List<TYPE_ACTION> TYPEACTIONS) {
-        return TYPEACTIONS.stream().map(StrategieTypeActionAdaptateurGr2E10::adapter).toList();
+    public static List<String> adapter(List<TYPE_ACTION> typeActions) {
+        return typeActions.stream().map(StrategieTypeActionAdaptateurGr2E10::adapter).toList();
     }
 
 }

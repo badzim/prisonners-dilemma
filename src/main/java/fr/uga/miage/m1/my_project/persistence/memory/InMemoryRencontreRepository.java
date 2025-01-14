@@ -4,12 +4,14 @@ import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 @Primary
 public class InMemoryRencontreRepository implements RencontreRepository {
@@ -62,7 +64,7 @@ public class InMemoryRencontreRepository implements RencontreRepository {
 
             // Met à jour l'état de la rencontre
             rencontre.setEtatRencontre(nouvelEtat);
-            System.out.println("Rencontre " + idRencontre + " passée en " + nouvelEtat + ".");
+            log.info("Rencontre {}passée en {}.", idRencontre, nouvelEtat);
         }
     }
 
@@ -110,7 +112,7 @@ public class InMemoryRencontreRepository implements RencontreRepository {
             return rencontres.values()
                     .stream()
                     .filter(r -> r.getEtatRencontre() == ETAT_RENCONTRE.EN_ATTENTE)
-                    .collect(Collectors.toList());
+                    .toList();
         }
     }
 }

@@ -1,9 +1,6 @@
-package fr.uga.miage.m1.my_project.service;
+package fr.uga.miage.m1.my_project.core.domain.service;
 
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
-import fr.uga.miage.m1.my_project.core.domain.service.JoueurService;
-import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
-import fr.uga.miage.m1.my_project.core.domain.service.TourService;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
@@ -484,4 +481,38 @@ class RencontreServiceTest {
 
 
 
+    @Test
+    void testHandleAbondonPlayerDisconnected() {
+        String initiateurId = "initiateur123";
+        String adversaireId = "adversaire123";
+
+        Joueur initiateurJoueur = new Humain(initiateurId, "Joueur Test");
+        Joueur adversaireJoueur = new Humain("opponent456", "Adversaire Test");
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(initiateurJoueur);
+        rencontre.setAdversaire(adversaireJoueur);
+
+        Tour currentTour = new Tour(1);
+        rencontre.setCurrentTour(currentTour);
+
+        Map<String, SseEmitter> sseEmitters = new HashMap<>();
+        sseEmitters.put(initiateurId, null);
+        when(sseServiceImpl.getSseEmitters()).thenReturn(sseEmitters);
+
+        // Configuration pour le groupe G2_5
+        String groupId = "G2_5";
+
+        when(inMemoryRencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre));
+        when(joueurService.getJoueurById(initiateurId)).thenReturn(initiateurJoueur);
+        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        rencontreService.handleDesconnectedPlayer(initiateurId);
+
+
+
+        verify(tourService, times(1)).setActionJoueur(eq(rencontreService.remplacerJoueurParRobot(initiateurJoueur)), eq(rencontre), any());
+
+
+
+    }
 }

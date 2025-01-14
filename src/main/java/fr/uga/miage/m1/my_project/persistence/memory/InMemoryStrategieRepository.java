@@ -41,10 +41,10 @@ public class InMemoryStrategieRepository implements StrategieRepository {
     }
 
     // Méthode pour récupérer une stratégie à la demande
-    public Strategie getStrategie(TYPE_STRATEGIE TYPESTRATEGIE) {
-        Supplier<Strategie> supplier = strategieSuppliers.get(TYPESTRATEGIE);
+    public Strategie getStrategie(TYPE_STRATEGIE typeStrategie) {
+        Supplier<Strategie> supplier = strategieSuppliers.get(typeStrategie);
         if (supplier == null) {
-            throw new IllegalArgumentException("Stratégie inconnue : " + TYPESTRATEGIE);
+            throw new IllegalArgumentException("Stratégie inconnue : " + typeStrategie);
         }
         return supplier.get(); // Instancie la stratégie
     }

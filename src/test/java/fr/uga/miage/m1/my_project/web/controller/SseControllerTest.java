@@ -1,4 +1,4 @@
-package fr.uga.miage.m1.my_project.controller;
+package fr.uga.miage.m1.my_project.web.controller;
 
 import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import org.junit.jupiter.api.Test;

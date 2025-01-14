@@ -119,4 +119,12 @@ public interface RencontreServicePort {
      * @return Le score du dernier tour du joueur.
      */
     int getDernierResultatJoueur(Rencontre rencontre, Joueur joueur);
+
+    /**
+     * Crée une entity robot à partir d'un joueur humain.
+     *
+     * @param joueur    Le joueur.
+     * @return Un joueur robot.
+     */
+    Joueur remplacerJoueurParRobot(Joueur joueur);
 }
