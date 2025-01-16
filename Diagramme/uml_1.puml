@@ -3,6 +3,20 @@
 enum TypeAction {
     COOPERER
     TRAHIR
+    ABONDONNER
+}
+
+enum ChoixJoueur {
+    INITIER
+    REJOINDRE
+    QUITTER
+}
+
+enum EtatJoueur {
+    EN_MENU
+    EN_ATTENTE
+    EN_PARTIE
+
 }
 
 
@@ -67,14 +81,14 @@ class Rancunier extends Strategie {
 
 }
 
-class NacificateurNaïf extends Strategie {
+class Pavlov extends Strategie {
     + getAction(historiqueAdversaire : List<TypeAction>) : TypeAction
 
 }
 
 
 Joueur "*" -- "*" Strategie : utilise >
-Rencontre "*" -- "0..1" Joueur : rejoin <
+Rencontre "*" -- "0..1" Joueur : rejoins <
 Rencontre "*" -- "1" Joueur : Initie <
 Rencontre "1" *-- "*" Tour : Contient >
 

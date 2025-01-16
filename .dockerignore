@@ -1,0 +1,10 @@
+# Ignorer tout le contenu du dossier target
+target/*
+
+# Inclure les fichiers .jar dans target
+!target/*.jar
+!target/classes/libs/StrategiesLib_G2_5-1.0-SNAPSHOT.jar
+
+.git
+.dockerignore
+docker-compose.yml

@@ -3,6 +3,9 @@
 *.ipr
 *.iws
 *.jar
+# Inclure les fichiers .jar dans target
+!libs/*.jar
+!libs/G2_10/*.jar
 *.sw?
 *~
 .#*
@@ -42,3 +45,4 @@ secrets.yml
 .git-hooks/
 node_modules
 .idea
+TODO.md

@@ -1,13 +1,9 @@
 package fr.uga.miage.m1.my_project;
 
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-class MyProjectApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
+@ActiveProfiles("test")
+public interface TestConfig {
 }

@@ -1,0 +1,81 @@
+@startuml
+actor Client
+participant "SseController"
+participant "SseService"
+participant "RencontreController"
+participant "RencontreService" as Rencontre
+participant "SseEmitter" as SSE
+
+activate Client
+
+== Abonnement d'un client ==
+Client -> SseController: GET /api/sse/subscribe/{clientId}
+activate SseController
+
+SseController -> SseService: subscribe(clientId)
+activate SseService
+
+SseService -> SseService: Ajout à la collection SseEmitters
+activate SseService
+SseService --> SseService: ok
+deactivate SseService
+
+SseService --> SseController: Retourne SseEmitter
+deactivate SseService
+
+SseController -> Client: "Connexion SSE établie"
+deactivate SseController
+
+== Initialisation d'une rencontre ==
+Client -> RencontreController: POST /api/rencontre/initier
+activate RencontreController
+RencontreController -> Rencontre: initierRencontre(joueurId, nombreTours)
+activate Rencontre
+
+Rencontre -> SseService: sendMessage(joueurId, "Rencontre initiée")
+activate SseService
+SseService -> SSE: Envoi d'un message SSE
+SseService --> Rencontre: Message envoyé
+deactivate SseService
+
+Rencontre --> RencontreController: ID de la rencontre
+deactivate Rencontre
+RencontreController -> Client: "Rencontre initiée avec ID"
+deactivate RencontreController
+
+== Envoi d'une action dans une rencontre ==
+Client -> RencontreController: POST /api/rencontre/action/{clientId}
+activate RencontreController
+RencontreController -> Rencontre: processPlayerAction(clientId, action)
+activate Rencontre
+
+Rencontre -> SseService: sendMessage(adversaireId, "Votre adversaire a joué")
+activate SseService
+SseService -> SSE: Envoi d'un message SSE
+SseService --> Rencontre: Notification envoyée
+deactivate SseService
+
+Rencontre --> RencontreController: Résultat du tour
+deactivate Rencontre
+RencontreController -> Client: "Tour traité"
+deactivate RencontreController
+
+== Diffusion d'un message global ==
+Client -> SseController: POST /api/sse/broadcast
+activate SseController
+SseController -> SseService: broadcast("Message global à tous les clients")
+activate SseService
+SseService -> SseEmitters: Parcours des SseEmitters
+SseService -> SSE: Envoi du message
+SseService --> SseController: Diffusion terminée
+deactivate SseService
+SseController -> Client: Accusé de réception
+deactivate SseController
+
+== Déconnexion ou erreur ==
+SSE -> SseService: onCompletion/onTimeout/onError
+activate SseService
+SseService -> SseService: Suppression du SseEmitter
+SseService --> SSE: SseEmitter nettoyé
+deactivate SseService
+@enduml
