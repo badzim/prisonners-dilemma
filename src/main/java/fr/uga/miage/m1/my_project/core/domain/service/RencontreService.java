@@ -336,7 +336,7 @@ public class RencontreService implements RencontreServicePort {
         }
     }
 
-    private void handleRobotActionAtTourStart(Rencontre rencontre, Joueur joueur, boolean isInitiateur) {
+    public void handleRobotActionAtTourStart(Rencontre rencontre, Joueur joueur, boolean isInitiateur) {
         if (joueur instanceof Robot) {
             List<TYPE_ACTION> historiqueAdverse = isInitiateur ? rencontre.getHistoriqueAdversaire() : rencontre.getHistoriqueInitiateur();
             TYPE_ACTION action = joueur.jouer(historiqueAdverse, joueur.getScore());

@@ -1,26 +1,29 @@
 package fr.uga.miage.m1.my_project.web.controller;
 
+import fr.uga.miage.m1.my_project.core.port.input.SseControllerPort;
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-@RestController
-@RequestMapping("/api/sse")
-@RequiredArgsConstructor
-@Slf4j
-public class SseController {
 
-    private final SseServiceImpl sseServiceImpl;
+@RestController
+@Slf4j
+@RequiredArgsConstructor
+public class SseController implements SseControllerPort {
+
+    @Qualifier("sseServiceImpl")
+    private final EventEmitter sseServiceImpl;
 
 
 
     // Endpoint pour abonner un client
-    @GetMapping("/subscribe/{clientId}")
-    public ResponseEntity<SseEmitter> subscribe(@PathVariable String clientId) {
+    public ResponseEntity<SseEmitter> subscribe( String clientId) {
         try {
             SseEmitter emitter = sseServiceImpl.addSseEmitter(clientId);
             log.info("Client {} abonné avec succès", clientId);
@@ -33,15 +36,13 @@ public class SseController {
     }
 
     // Endpoint pour envoyer un message à un autre client
-    @PostMapping("/send/{clientId}")
-    public ResponseEntity<String> sendMessage(@PathVariable String clientId, @RequestBody String message) {
+    public ResponseEntity<String> sendMessage(String clientId, String message) {
         sseServiceImpl.sendEvent(clientId, "message", message);
         return ResponseEntity.ok("Si le client était connecté, le message a été envoyé.");
     }
 
     // Endpoint pour envoyer un message global
-    @PostMapping("/broadcast")
-    public ResponseEntity<String> broadcast(@RequestBody String message) {
+    public ResponseEntity<String> broadcast(String message) {
         sseServiceImpl.broadcast("broadcast", message);
         return ResponseEntity.ok("Message diffusé à tous les clients.");
     }

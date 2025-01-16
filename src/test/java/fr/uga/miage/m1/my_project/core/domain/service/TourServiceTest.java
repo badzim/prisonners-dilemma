@@ -7,8 +7,10 @@ import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
+import fr.uga.miage.m1.my_project.core.port.input.TourServicePort;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class TourServiceTest implements TestConfig {
 
     @Autowired
-    private TourService tourService;
+    @Qualifier("tourService")
+    private TourServicePort tourService;
 
     @Test
     void testBothCooperate() {

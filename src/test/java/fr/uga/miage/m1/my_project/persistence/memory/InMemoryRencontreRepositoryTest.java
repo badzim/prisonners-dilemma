@@ -3,8 +3,10 @@ package fr.uga.miage.m1.my_project.persistence.memory;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
+import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
 
@@ -12,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryRencontreRepositoryTest {
 
-    private InMemoryRencontreRepository inMemoryRencontreRepository;
+    @Qualifier("inMemoryRencontreRepository")
+    private RencontreRepository inMemoryRencontreRepository;
 
     @BeforeEach
     void setUp() {

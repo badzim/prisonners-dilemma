@@ -1,11 +1,10 @@
 package fr.uga.miage.m1.my_project.web.service;
 
+import fr.uga.miage.m1.my_project.core.port.input.RencontreServicePort;
 import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import fr.uga.miage.m1.my_project.core.port.output.TaskScheduler;
-import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,14 +19,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Data
 @Primary
 public class PingSchedulerServiceImpl implements TaskScheduler {
 
     @Qualifier("sseServiceImpl")
     private final EventEmitter sseService;
     private ScheduledExecutorService pingScheduler;
-    private final RencontreService rencontreService;
+    private final RencontreServicePort rencontreService;
 
     @PostConstruct
     public void startScheduler() {
@@ -67,4 +65,11 @@ public class PingSchedulerServiceImpl implements TaskScheduler {
             pingScheduler.shutdown();
         }
     }
+
+    @Override
+    public void setPingScheduler(ScheduledExecutorService scheduler) {
+        this.pingScheduler = scheduler;
+    }
+
+
 }

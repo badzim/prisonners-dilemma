@@ -1,8 +1,11 @@
 package fr.uga.miage.m1.my_project.web.service;
 
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
+import fr.uga.miage.m1.my_project.core.port.output.TaskScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
@@ -16,10 +19,12 @@ import static org.mockito.Mockito.*;
 class PingSchedulerServiceImplTest {
 
     @SpyBean
-    private PingSchedulerServiceImpl pingSchedulerServiceImpl;
+    @Qualifier("pingSchedulerServiceImpl")
+    private TaskScheduler pingSchedulerServiceImpl;
 
     @SpyBean
-    private SseServiceImpl sseServiceImpl;
+    @Qualifier("sseServiceImpl")
+    private EventEmitter sseServiceImpl;
 
     @BeforeEach
     void setUp() {

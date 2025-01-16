@@ -127,4 +127,7 @@ public interface RencontreServicePort {
      * @return Un joueur robot.
      */
     Joueur remplacerJoueurParRobot(Joueur joueur);
+
+
+    void handleRobotActionAtTourStart(Rencontre rencontre, Joueur joueur, boolean isInitiateur);
 }

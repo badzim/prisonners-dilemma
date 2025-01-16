@@ -1,9 +1,11 @@
 package fr.uga.miage.m1.my_project.web.service;
 
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
@@ -22,7 +24,8 @@ import static org.mockito.Mockito.*;
 class SseServiceImplTest {
 
     @Autowired
-    private SseServiceImpl sseServiceImpl;
+    @Qualifier("sseServiceImpl")
+    private EventEmitter sseServiceImpl;
 
     @Test
     void testAddSseEmitter() {

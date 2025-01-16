@@ -1,6 +1,7 @@
 package fr.uga.miage.m1.my_project.core.domain.service;
 
 import fr.uga.miage.m1.my_project.core.domain.model.enums.ETAT_RENCONTRE;
+import fr.uga.miage.m1.my_project.core.exception.rest.InvalidActionRestException;
 import fr.uga.miage.m1.my_project.core.exception.rest.RencontreNotFoundRestException;
 import fr.uga.miage.m1.my_project.core.domain.model.Rencontre;
 import fr.uga.miage.m1.my_project.core.domain.model.Tour;
@@ -10,15 +11,20 @@ import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_STRATEGIE;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Humain;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Joueur;
 import fr.uga.miage.m1.my_project.core.domain.model.joueur.Robot;
+import fr.uga.miage.m1.my_project.core.port.input.JoueurServicePort;
+import fr.uga.miage.m1.my_project.core.port.input.TourServicePort;
+import fr.uga.miage.m1.my_project.core.port.output.EventEmitter;
+import fr.uga.miage.m1.my_project.core.port.output.RencontreRepository;
 import fr.uga.miage.m1.my_project.core.port.output.StrategieRepository;
-import fr.uga.miage.m1.my_project.persistence.memory.InMemoryRencontreRepository;
 import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
-import fr.uga.miage.m1.my_project.web.service.PingSchedulerServiceImpl;
 import fr.uga.miage.m1.my_project.web.service.SseServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -37,20 +43,23 @@ class RencontreServiceTest {
     private RencontreService rencontreService;
 
     @MockBean
-    private PingSchedulerServiceImpl pingSchedulerServiceImpl;
+    @Qualifier("sseServiceImpl")
+    private EventEmitter sseServiceImpl;
 
     @MockBean
-    private SseServiceImpl sseServiceImpl;
+    @Qualifier("inMemoryRencontreRepository")
+    private RencontreRepository rencontreRepository;
 
     @MockBean
-    private InMemoryRencontreRepository inMemoryRencontreRepository;
+    @Qualifier("joueurService")
+    private JoueurServicePort joueurService;
 
     @MockBean
-    private JoueurService joueurService;
+    @Qualifier("tourService")
+    private TourServicePort tourService;
 
-    @MockBean
-    private TourService tourService;
     @Autowired
+    @Qualifier("inMemoryStrategieRepository")
     private StrategieRepository strategieFactoryService;
 
     @BeforeEach
@@ -69,7 +78,7 @@ class RencontreServiceTest {
         Rencontre rencontre2 = new Rencontre();
         rencontre2.setInitiateur(new Humain("id_test_02", "nom_test_02"));
 
-        when(inMemoryRencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre1, rencontre2));
+        when(rencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre1, rencontre2));
 
         // Act
         List<RencontreResponse> result = rencontreService.getRencontresEnAttente();
@@ -81,7 +90,7 @@ class RencontreServiceTest {
         // Le mappeur est statique, donc on se contente d'assurer la taille et la non-nullité.
 
         // Vérifie que les méthodes internes sont appelées
-        verify(inMemoryRencontreRepository, times(2)).getRencontresEnAttente();
+        verify(rencontreRepository, times(2)).getRencontresEnAttente();
         // On ne peut pas vérifier directement removeDisconnectedRencontres() car elle est privée,
         // mais on voit qu'au moins on appelle getRencontresEnAttente() deux fois (une dans remove et une après).
         // On peut également vérifier qu'on a appelé handleDisconnectedPlayers sur sseService.
@@ -112,7 +121,7 @@ class RencontreServiceTest {
         verify(joueurService, times(1)).getJoueurById(clientId); // Vérifie que le joueur est récupéré
         assertSame(ETAT_JOUEUR.EN_ATTENTE, joueurService.getJoueurById(clientId).getEtat());
         // Vérifie que la rencontre a été ajoutée et que le compteur d'attente a été incrémenté
-        verify(inMemoryRencontreRepository, times(1)).addRencontre(any(), any(Rencontre.class));
+        verify(rencontreRepository, times(1)).addRencontre(any(), any(Rencontre.class));
 
         // Vérifie les appels SSE
         verify(sseServiceImpl, times(1)).sendEvent(anyString(), anyString(), anyString());
@@ -148,7 +157,7 @@ class RencontreServiceTest {
 
         when(sseServiceImpl.getSseEmitters()).thenReturn(emitters);
         when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
-        when(inMemoryRencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
 
         // Act
         rencontreService.rejoindreRencontre(adversaireId, idRencontre);
@@ -163,15 +172,85 @@ class RencontreServiceTest {
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseServiceImpl, times(3)).getSseEmitters(); // Vérifie la connexion du client
         verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
-        verify(inMemoryRencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
+        verify(rencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
 
         // Vérifie que les états des joueurs sont correctement mis à jour
-        verify(inMemoryRencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
-        verify(inMemoryRencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
+        verify(rencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
+        verify(rencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
 
         // Vérifie les notifications SSE
         verify(sseServiceImpl, times(2)).sendEvent(anyString(), anyString(), anyString());
         verify(sseServiceImpl, times(1)).broadcast(anyString(), contains(adversaireId));
+    }
+
+    @Test
+    void testValidateRejoindreRencontre_ClientJoinsOwnGame_ThrowsException() {
+        // Arrange
+        String clientId = "client123";
+        String idRencontre = "rencontre456";
+
+        // Créer un joueur Humain pour représenter l'initiateur
+        Humain initiateur = new Humain(clientId, "Initiateur Test");
+
+        // Créer une rencontre factice
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(initiateur);
+        rencontre.setIdRencontre(idRencontre);
+
+        Map<String, SseEmitter> emitters = new HashMap<>();
+        emitters.put(clientId, new SseEmitter());
+
+        when(sseServiceImpl.getSseEmitters()).thenReturn(emitters);
+
+        // Mock des comportements
+        when(rencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
+
+        // Act & Assert
+        InvalidActionRestException exception = assertThrows(InvalidActionRestException.class, () -> {
+            rencontreService.validateRejoindreRencontre(clientId, idRencontre);
+        });
+
+        // Vérifie le message d'exception
+        assertEquals("Vous ne pouvez pas rejoindre votre propre partie.", exception.getMessage());
+
+        // Vérifie que la méthode findRencontreById est appelée
+        verify(rencontreRepository, times(1)).findRencontreById(idRencontre);
+    }
+
+    @Test
+    void testValidateRejoindreRencontre_GameAlreadyFull_ThrowsException() {
+        // Arrange
+        String clientId = "client123";
+        String idRencontre = "rencontre456";
+
+        // Créer un joueur Humain pour représenter l'initiateur et l'adversaire
+        Humain initiateur = new Humain("initiateur123", "Initiateur Test");
+        Humain adversaire = new Humain("adversaire123", "Adversaire Test");
+
+        // Créer une rencontre factice avec un adversaire déjà présent
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(initiateur);
+        rencontre.setAdversaire(adversaire);
+        rencontre.setIdRencontre(idRencontre);
+
+        Map<String, SseEmitter> emitters = new HashMap<>();
+        emitters.put(clientId, new SseEmitter());
+
+        when(sseServiceImpl.getSseEmitters()).thenReturn(emitters);
+
+        // Mock des comportements
+        when(rencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
+
+        // Act & Assert
+        InvalidActionRestException exception = assertThrows(InvalidActionRestException.class, () -> {
+            rencontreService.validateRejoindreRencontre(clientId, idRencontre);
+        });
+
+        // Vérifie le message d'exception
+        assertEquals("La rencontre est déjà complète.", exception.getMessage());
+
+        // Vérifie que la méthode findRencontreById est appelée
+        verify(rencontreRepository, times(1)).findRencontreById(idRencontre);
     }
 
     @Test
@@ -200,7 +279,7 @@ class RencontreServiceTest {
 
         when(sseServiceImpl.getSseEmitters()).thenReturn(emitters);
         when(joueurService.getJoueurById(adversaireId)).thenReturn(adversaire);
-        when(inMemoryRencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreById(idRencontre)).thenReturn(rencontre);
 
         // Act
         rencontreService.rejoindreRencontre(adversaireId, idRencontre);
@@ -215,11 +294,11 @@ class RencontreServiceTest {
         // Vérifie que les appels aux dépendances sont faits correctement
         verify(sseServiceImpl, times(3)).getSseEmitters(); // Vérifie la connexion du client
         verify(joueurService, times(1)).getJoueurById(adversaireId); // Vérifie que le joueur est récupéré
-        verify(inMemoryRencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
+        verify(rencontreRepository, times(1)).findRencontreById(idRencontre); // Vérifie que la rencontre est récupérée
 
         // Vérifie que les états des joueurs sont correctement mis à
-        verify(inMemoryRencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
-        verify(inMemoryRencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
+        verify(rencontreRepository, times(1)).changerEtatRencontre(idRencontre, ETAT_RENCONTRE.EN_COURS);
+        verify(rencontreRepository, times(1)).addRencontreParClient(adversaireId, rencontre);
 
         // Vérifie les notifications SSE
         verify(sseServiceImpl, times(2)).sendEvent(anyString(), anyString(), anyString());
@@ -246,7 +325,7 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseServiceImpl.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Mock pour vérifier si le tour est prêt
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
@@ -265,8 +344,9 @@ class RencontreServiceTest {
         verify(sseServiceImpl, times(1)).getSseEmitters();
     }
 
-    @Test
-    void testEnregistrerChoix_PlayerAbandons() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "G2_5", "G2_10"})
+    void testEnregistrerChoix_PlayerAbandons(String groupId) {
         // Arrange
         String clientId = "client123";
         TYPE_ACTION action = TYPE_ACTION.ABONDONNER;
@@ -284,22 +364,22 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseServiceImpl.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Mock handlePlayerAbandon pour retourner une action par défaut
-        when(rencontreService.handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"" ))
+        when(rencontreService.handlePlayerAbandon(rencontre, joueur, strategie, adversaire,groupId ))
                 .thenReturn(TYPE_ACTION.COOPERER);
 
         // Mock pour sendEvent
         doNothing().when(sseServiceImpl).sendEvent(anyString(), anyString(), anyString());
 
         // Act
-        rencontreService.enregistrerChoix(clientId, action, strategie,"" );
+        rencontreService.enregistrerChoix(clientId, action, strategie,groupId );
 
         // Assert
         // Vérifie que l'abandon a été géré
-        verify(rencontreService, times(2)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,"");
+        verify(rencontreService, times(2)).handlePlayerAbandon(rencontre, joueur, strategie, adversaire,groupId);
 
         // Vérifie que l'action enregistrée après l'abandon est COOPERER
         verify(tourService, times(1)).setActionJoueur(joueur, rencontre, TYPE_ACTION.COOPERER);
@@ -307,6 +387,8 @@ class RencontreServiceTest {
         // Vérifie l'envoi de l'événement d'abandon
         verify(sseServiceImpl, times(2)).sendEvent(anyString(), anyString(), anyString());
     }
+
+
 
 
     @Test
@@ -329,7 +411,7 @@ class RencontreServiceTest {
 
         // Mock des comportements
         when(sseServiceImpl.getSseEmitters()).thenReturn(java.util.Collections.singletonMap(clientId, new SseEmitter()));
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Mock pour vérifier si le tour est prêt
         when(rencontreService.estTourPret(rencontre)).thenReturn(true);
@@ -372,8 +454,8 @@ class RencontreServiceTest {
         when(sseServiceImpl.getSseEmitters()).thenReturn(sseEmitters);
 
         // Mock des rencontres dans RencontreManagerService
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(adversaireId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(adversaireId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
 
         // Act - Le premier joueur abandonne
         rencontreService.enregistrerChoix(initiateurId, TYPE_ACTION.ABONDONNER, TYPE_STRATEGIE.DONNANTDONNANT, "");
@@ -460,7 +542,7 @@ class RencontreServiceTest {
 
         // Mock des services
         when(sseServiceImpl.getSseEmitters()).thenReturn(Collections.singletonMap(clientId, new SseEmitter()));
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(clientId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
         when(rencontreService.estTourPret(rencontre)).thenReturn(false);
 
         // Configuration pour le groupe G2_5
@@ -503,16 +585,80 @@ class RencontreServiceTest {
         // Configuration pour le groupe G2_5
         String groupId = "G2_5";
 
-        when(inMemoryRencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre));
+        when(rencontreRepository.getRencontresEnAttente()).thenReturn(List.of(rencontre));
         when(joueurService.getJoueurById(initiateurId)).thenReturn(initiateurJoueur);
-        when(inMemoryRencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(rencontre);
         rencontreService.handleDesconnectedPlayer(initiateurId);
 
-
-
         verify(tourService, times(1)).setActionJoueur(eq(rencontreService.remplacerJoueurParRobot(initiateurJoueur)), eq(rencontre), any());
+    }
+
+    @Test
+    void testBothPlayersAbondonne() {
+        String initiateurId = "initiateur123";
+        String adversaireId = "adversaire123";
+
+        Joueur initiateurJoueur = new Humain(initiateurId, "Joueur Test");
+        initiateurJoueur.setStrategieAutomatique(strategieFactoryService.getStrategie(TYPE_STRATEGIE.TOUJOURSCOOPERER));
+        Joueur adversaireJoueur = new Humain(adversaireId, "Adversaire Test");
+        adversaireJoueur.setStrategieAutomatique(strategieFactoryService.getStrategie(TYPE_STRATEGIE.TOUJOURSTRAHIR));
+
+        initiateurJoueur = rencontreService.remplacerJoueurParRobot(initiateurJoueur);
+        adversaireJoueur = rencontreService.remplacerJoueurParRobot(adversaireJoueur);
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setCurrentTour(new Tour(1));
+        rencontre.setInitiateur(initiateurJoueur);
+        rencontre.setAdversaire(adversaireJoueur);
 
 
 
+        rencontreService.handleRobotActionAtTourStart(rencontre, initiateurJoueur, true);
+        rencontreService.handleRobotActionAtTourStart(rencontre, adversaireJoueur, false);
+
+        assertEquals(TYPE_ACTION.COOPERER, rencontre.getCurrentTour().getActionInitiateur());
+        assertEquals(TYPE_ACTION.TRAHIR, rencontre.getCurrentTour().getActionAdversaire());
+        // il faut faire une rencontre avec deux robot au début....
+        }
+
+    @Test
+    void testGetRencontreEnCoursByClientIdThrowsException() {
+        String initiateurId = "initiateur123";
+        String adversaireId = "adversaire123";
+        Joueur initiateurJoueur = new Humain(initiateurId, "Joueur Test");
+        Joueur adversaireJoueur = new Humain(adversaireId, "Adversaire Test");
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(initiateurJoueur);
+        rencontre.setAdversaire(adversaireJoueur);
+
+
+        when(rencontreRepository.findRencontreByClientIdAndEtatRencontre(initiateurId, ETAT_RENCONTRE.EN_COURS)).thenReturn(null);
+
+
+
+        // Act & Assert
+        RencontreNotFoundRestException exception = assertThrows(RencontreNotFoundRestException.class, () -> {
+            rencontreService.getRencontreEnCoursByClientId(initiateurId);
+        });
+
+        assertEquals("Rencontre non trouvée pour le client.", exception.getMessage());
+        assertEquals(initiateurId, exception.getRencontreId());
+    }
+
+    @Test
+    void testGetDerniersResultatJoueur() {
+        String initiateurId = "initiateur123";
+        String adversaireId = "adversaire123";
+
+        Joueur initiateurJoueur = new Humain(initiateurId, "Joueur Test");
+        Joueur adversaireJoueur = new Humain(adversaireId, "Adversaire Test");
+
+        Rencontre rencontre = new Rencontre();
+        rencontre.setInitiateur(initiateurJoueur);
+        rencontre.setAdversaire(adversaireJoueur);
+
+        int result = rencontreService.getDernierResultatJoueur(rencontre, initiateurJoueur);
+        assertEquals(0, result);
     }
 }

@@ -2,26 +2,27 @@ package fr.uga.miage.m1.my_project.web.controller;
 
 import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_ACTION;
 import fr.uga.miage.m1.my_project.core.domain.model.enums.TYPE_STRATEGIE;
+import fr.uga.miage.m1.my_project.core.port.input.RencontreControllerPort;
+import fr.uga.miage.m1.my_project.core.port.input.RencontreServicePort;
 import fr.uga.miage.m1.my_project.web.restapi.response.RencontreResponse;
-import fr.uga.miage.m1.my_project.core.domain.service.RencontreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// this is an adapter
+// this is an adaptery
 @RestController
-@RequestMapping("/api/rencontre")
 @RequiredArgsConstructor
-public class RencontreController {
+public class RencontreControllerImpl implements RencontreControllerPort {
 
-    private final RencontreService rencontreService;
+    @Qualifier("rencontreService")
+    private final RencontreServicePort rencontreService;
 
 
-    @PostMapping("/initier")
-    public ResponseEntity<String> initierRencontre(@RequestParam String clientId, @RequestParam int nombreTours) {
+    public ResponseEntity<String> initierRencontre(String clientId, int nombreTours) {
         boolean success = rencontreService.initierRencontre(clientId, nombreTours);
 
         if (success) {
@@ -31,23 +32,22 @@ public class RencontreController {
         }
     }
 
-    @PostMapping("/rejoindre")
-    public void rejoindreRencontre(@RequestParam String clientId, @RequestParam String idRencontre) {
+    public void rejoindreRencontre(String clientId, String idRencontre) {
         rencontreService.rejoindreRencontre(clientId, idRencontre);
     }
 
-    @GetMapping("/disponibles")
+
     public ResponseEntity<List<RencontreResponse>> getRencontresDisponibles() {
         // Récupérer les rencontres disponibles et les convertir en DTOs
         return ResponseEntity.ok(rencontreService.getRencontresEnAttente());
     }
 
-    @PostMapping("/play/choix")
+
     public ResponseEntity<Void> envoyerChoix(
-            @RequestParam String clientId,
-            @RequestParam TYPE_ACTION action,
-            @RequestParam(required = false) TYPE_STRATEGIE strategie,
-            @RequestParam (required = false) String groupId) {
+             String clientId,
+             TYPE_ACTION action,
+             TYPE_STRATEGIE strategie,
+             String groupId) {
         rencontreService.enregistrerChoix(clientId, action, strategie, groupId);
         return ResponseEntity.ok().build();
     }
